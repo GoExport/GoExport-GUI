@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Any
 
 from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QPixmap
 from PyQt6.QtWidgets import (
     QComboBox, QFileDialog, QFormLayout, QFrame, QHBoxLayout, QLabel, QLineEdit,
     QMainWindow, QMessageBox, QPushButton, QProgressBar, QPlainTextEdit,
@@ -20,6 +21,8 @@ STAGE_NAMES = {
     "muxing": "Exporting video…", "outro": "Appending outro…",
     "finalizing": "Finalizing…",
 }
+
+ASSET_DIR = Path(__file__).resolve().parent / "resources"
 
 
 class MainWindow(QMainWindow):
@@ -44,8 +47,21 @@ class MainWindow(QMainWindow):
         scroll.setWidget(page)
         self.setCentralWidget(scroll)
 
-        title = QLabel("GoExport GUI")
-        title.setObjectName("title")
+        title = QLabel()
+        title.setObjectName("brandLogo")
+        logo = QPixmap(str(ASSET_DIR / "goexport-logo.svg"))
+        if logo.isNull():
+            title.setText("GoExport")
+        else:
+            title.setPixmap(
+                logo.scaled(
+                    330, 60,
+                    Qt.AspectRatioMode.KeepAspectRatio,
+                    Qt.TransformationMode.SmoothTransformation,
+                )
+            )
+        title.setAccessibleName("GoExport")
+        title.setFixedHeight(60)
         subtitle = QLabel("Export a GoAnimate video through your local Wrapper-compatible server.")
         subtitle.setObjectName("subtitle")
         subtitle.setWordWrap(True)
@@ -194,7 +210,11 @@ class MainWindow(QMainWindow):
 
     def _choose_output(self) -> None:
         filename, _ = QFileDialog.getSaveFileName(
-            self, "Choose output filename", self.output.text(), "Videos (*.mp4 *.mov *.mkv)"
+            self,
+            "Choose output filename",
+            self.output.text(),
+            "Videos (*.mp4 *.mov *.mkv)",
+            options=QFileDialog.Option.DontUseNativeDialog,
         )
         if filename:
             self.output.setText(filename)

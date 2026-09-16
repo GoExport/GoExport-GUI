@@ -4,7 +4,7 @@ a = Analysis(
     ["gui_main.py"],
     pathex=[],
     binaries=[],
-    datas=[],
+    datas=[("goexport_gui/resources/goexport-logo.svg", "goexport_gui/resources")],
     hiddenimports=[],
     hookspath=[],
     excludes=[],

@@ -13,9 +13,9 @@ no_outro = false
 # Change these endpoints to the values used by your FlashThemes installation.
 resolution = "1280x720"
 format = "mp4"
-url = "http://localhost:4343/"
-api_url = "http://localhost:4343/"
-swf_url = "http://localhost:4664/animation/414827163ad4eb60/player.swf"
-store_path = "http://localhost:4664/store/3a981f5cb2739137/<store>"
-client_theme_path = "http://localhost:4664/static/ad44370a650793d9/<client_theme>"
+url = "https://flashthemes.net/"
+api_url = "https://flashthemes.net/"
+swf_url = "https://flashthemes.net/animation/414827163ad4eb60/player.swf"
+store_path = "https://flashthemes.net/store/3a981f5cb2739137/<store>"
+client_theme_path = "https://flashthemes.net/static/ad44370a650793d9/<client_theme>"
 no_outro = false
