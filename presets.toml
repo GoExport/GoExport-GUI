@@ -1,0 +1,21 @@
+# Copy a [preset.<name>] section to add another compatible platform. Selecting
+# a preset replaces Advanced values; your later edits remain until you select one.
+[preset."Wrapper Offline"]
+resolution = "1280x720"
+format = "mp4"
+url = "http://localhost:4343/"
+api_url = "http://localhost:4343/"
+swf_url = "http://localhost:4664/animation/414827163ad4eb60/player.swf"
+store_path = "http://localhost:4664/store/3a981f5cb2739137/<store>"
+client_theme_path = "http://localhost:4664/static/ad44370a650793d9/<client_theme>"
+no_outro = false
+[preset.FlashThemes]
+# Change these endpoints to the values used by your FlashThemes installation.
+resolution = "1280x720"
+format = "mp4"
+url = "http://localhost:4343/"
+api_url = "http://localhost:4343/"
+swf_url = "http://localhost:4664/animation/414827163ad4eb60/player.swf"
+store_path = "http://localhost:4664/store/3a981f5cb2739137/<store>"
+client_theme_path = "http://localhost:4664/static/ad44370a650793d9/<client_theme>"
+no_outro = false

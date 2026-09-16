@@ -1,0 +1,87 @@
+name: Build release executables
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: ${{ matrix.platform }}
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: Windows x64
+            runner: windows-2022
+            executable: GoExport-GUI.exe
+            archive: GoExport-GUI-windows-x64.zip
+          - platform: Linux x64
+            runner: ubuntu-22.04
+            executable: GoExport-GUI
+            archive: GoExport-GUI-linux-x64.zip
+          - platform: macOS Intel
+            runner: macos-15-intel
+            executable: GoExport-GUI
+            archive: GoExport-GUI-macos-intel.zip
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install build dependencies
+        run: python -m pip install --disable-pip-version-check -r requirements.txt
+
+      - name: Build executable
+        run: >-
+          python -m PyInstaller GoExport-GUI.spec --noconfirm --clean
+          --distpath package --workpath build
+
+      - name: Create minimal release archive
+        shell: pwsh
+        env:
+          EXECUTABLE: ${{ matrix.executable }}
+          ARCHIVE: ${{ matrix.archive }}
+        run: |
+          New-Item -ItemType Directory -Path release -Force | Out-Null
+          Copy-Item "package/$env:EXECUTABLE" "release/$env:EXECUTABLE"
+          Copy-Item presets.toml release/presets.toml
+          Compress-Archive -Path "release/$env:EXECUTABLE", release/presets.toml -DestinationPath "release/$env:ARCHIVE" -Force
+          Remove-Item "release/$env:EXECUTABLE", release/presets.toml -Force
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.archive }}
+          path: release/${{ matrix.archive }}
+          if-no-files-found: error
+
+  publish:
+    name: Publish GitHub Release
+    needs: build
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: release
+          merge-multiple: true
+
+      - name: Create or update release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" release/*.zip --clobber
+          else
+            gh release create "$TAG" release/*.zip --generate-notes
+          fi
