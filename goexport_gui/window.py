@@ -101,6 +101,7 @@ class MainWindow(QMainWindow):
         status_layout.setSpacing(10)
         self.status = QLabel("Ready")
         self.status.setObjectName("status")
+        self.status.setWordWrap(True)
         self.progress = QProgressBar()
         self.progress.setRange(0, 100)
         self.progress.setValue(0)
