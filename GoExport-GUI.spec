@@ -1,4 +1,5 @@
-# Build a single GUI executable that can be dropped into a GoExport release.
+# GoExport-GUI.spec
+
 a = Analysis(
     ["gui_main.py"],
     pathex=[],
@@ -9,7 +10,9 @@ a = Analysis(
     excludes=[],
     noarchive=False,
 )
+
 pyz = PYZ(a.pure)
+
 exe = EXE(
     pyz,
     a.scripts,

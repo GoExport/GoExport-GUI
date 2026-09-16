@@ -8,6 +8,17 @@ def main() -> int:
     app.setStyleSheet("""
         QWidget { color: #20242a; font-size: 10pt; }
         QMainWindow, QScrollArea, QScrollArea > QWidget > QWidget { background: #f4f6f8; }
+        QDialog, QMessageBox { background: #f4f6f8; }
+        QMessageBox QLabel { color: #20242a; background: transparent; }
+        QMessageBox QPushButton {
+            min-width: 76px;
+            padding: 7px 13px;
+            border: 1px solid #cbd1d8;
+            border-radius: 5px;
+            background: white;
+            color: #20242a;
+        }
+        QMessageBox QPushButton:hover { background: #eef2f6; }
         QLabel#title { font-size: 23pt; font-weight: 650; color: #15181d; }
         QLabel#subtitle { color: #626a76; padding-bottom: 4px; }
         QLabel#status { font-weight: 600; }
