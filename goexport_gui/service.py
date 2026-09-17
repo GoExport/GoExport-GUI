@@ -26,18 +26,23 @@ def find_goexport_executable() -> Path:
             return candidate
         raise FileNotFoundError(f"GOEXPORT_EXECUTABLE does not exist: {candidate}")
 
+    # Go binaries have no extension on Linux and macOS, while the Windows
+    # release is named ``GoExport.exe``.
+    executable_name = "GoExport.exe" if sys.platform == "win32" else "GoExport"
     app_dir = application_directory()
     candidates = (
-        app_dir / "GoExport.exe",
-        app_dir / "GoExport" / "GoExport.exe",
-        app_dir / "dist" / "GoExport-GUI" / "GoExport.exe",
+        app_dir / executable_name,
+        app_dir / "GoExport" / executable_name,
+        app_dir / "dist" / "GoExport-GUI" / executable_name,
     )
     for candidate in candidates:
         if candidate.is_file():
             return candidate
 
     locations = "\n".join(f"  • {candidate}" for candidate in candidates)
-    raise FileNotFoundError("GoExport.exe could not be found. Checked:\n" + locations)
+    raise FileNotFoundError(
+        f"{executable_name} could not be found. Checked:\n" + locations
+    )
 
 
 class GoExportService(QObject):
