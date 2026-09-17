@@ -45,16 +45,22 @@ jobs:
           --distpath package --workpath build
 
       - name: Create minimal release archive
-        shell: pwsh
+        shell: bash
         env:
           EXECUTABLE: ${{ matrix.executable }}
           ARCHIVE: ${{ matrix.archive }}
         run: |
-          New-Item -ItemType Directory -Path release -Force | Out-Null
-          Copy-Item "package/$env:EXECUTABLE" "release/$env:EXECUTABLE"
-          Copy-Item presets.toml release/presets.toml
-          Compress-Archive -Path "release/$env:EXECUTABLE", release/presets.toml -DestinationPath "release/$env:ARCHIVE" -Force
-          Remove-Item "release/$env:EXECUTABLE", release/presets.toml -Force
+          mkdir -p release
+          cp "package/$EXECUTABLE" "release/$EXECUTABLE"
+          cp presets.toml release/presets.toml
+          if [[ "$RUNNER_OS" != "Windows" ]]; then
+            chmod 755 "release/$EXECUTABLE"
+          fi
+          (
+            cd release
+            zip -q "$ARCHIVE" "$EXECUTABLE" presets.toml
+          )
+          rm "release/$EXECUTABLE" release/presets.toml
 
       - uses: actions/upload-artifact@v4
         with:
