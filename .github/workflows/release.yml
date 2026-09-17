@@ -56,10 +56,25 @@ jobs:
           if [[ "$RUNNER_OS" != "Windows" ]]; then
             chmod 755 "release/$EXECUTABLE"
           fi
-          (
-            cd release
-            zip -q "$ARCHIVE" "$EXECUTABLE" presets.toml
-          )
+          export RELEASE_OS="$RUNNER_OS"
+          python - <<'PY'
+          import os
+          import stat
+          import zipfile
+
+          executable = os.environ["EXECUTABLE"]
+          archive = os.path.join("release", os.environ["ARCHIVE"])
+          executable_mode = 0o755 if os.environ["RELEASE_OS"] != "Windows" else 0o644
+
+          with zipfile.ZipFile(archive, "w", zipfile.ZIP_DEFLATED) as output:
+              for filename, mode in ((executable, executable_mode), ("presets.toml", 0o644)):
+                  path = os.path.join("release", filename)
+                  entry = zipfile.ZipInfo(filename)
+                  entry.create_system = 3  # Unix: preserves the mode on extraction.
+                  entry.external_attr = (stat.S_IFREG | mode) << 16
+                  with open(path, "rb") as source:
+                      output.writestr(entry, source.read(), compress_type=zipfile.ZIP_DEFLATED)
+          PY
           rm "release/$EXECUTABLE" release/presets.toml
 
       - uses: actions/upload-artifact@v4
