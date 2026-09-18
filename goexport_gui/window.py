@@ -30,7 +30,7 @@ class MainWindow(QMainWindow):
         super().__init__()
         self._presets = load_presets()
         self._service: GoExportService | None = None
-        self.setWindowTitle("GoExport GUI")
+        self.setWindowTitle("GoExport")
         self.resize(680, 660)
         self.setMinimumSize(600, 540)
         self._build_ui()

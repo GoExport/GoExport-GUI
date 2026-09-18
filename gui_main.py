@@ -1,9 +1,15 @@
 """Entry point for GoExport GUI."""
 import sys
+from pathlib import Path
+from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import QApplication, QMessageBox
 from goexport_gui.window import MainWindow
 def main() -> int:
     app = QApplication(sys.argv)
+
+    icon_path = Path(__file__).parent / "goexport_gui" / "resources" / "default.ico"
+    app.setWindowIcon(QIcon(str(icon_path)))
+
     app.setStyle("Fusion")
     app.setStyleSheet("""
         QWidget { color: #f7f1ec; font-size: 10pt; }
