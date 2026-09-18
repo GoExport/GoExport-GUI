@@ -15,7 +15,7 @@ For exports, place `GoExport.exe` beside the GUI application. The GUI invokes
 GoExport's documented `--json record` CLI mode, so GoExport remains responsible
 for recording, bundled browser/Flash/FFmpeg dependencies, and output behavior.
 The Advanced section can optionally pass alternate Chromium, ChromeDriver, Flash,
-and FFmpeg paths to GoExport; leaving them blank uses GoExport's defaults.
+and FFmpeg settings to GoExport; leaving them blank uses GoExport's defaults.
 
 ## Presets
 
