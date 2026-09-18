@@ -170,6 +170,10 @@ class MainWindow(QMainWindow):
         self.store_path = QLineEdit()
         self.client_theme_path = QLineEdit()
         self.use_outro = QLineEdit()
+        self.chrome_path = QLineEdit()
+        self.chromedriver_path = QLineEdit()
+        self.flash_plugin_path = QLineEdit()
+        self.ffmpeg_path = QLineEdit()
         self.no_outro = QComboBox()
         self.no_outro.addItems(["Include outro", "No outro"])
         self._configure_combo_popup(self.no_outro)
@@ -183,6 +187,10 @@ class MainWindow(QMainWindow):
         form.addRow("Theme path", self.client_theme_path)
         form.addRow("Outro file", self.use_outro)
         form.addRow("Outro", self.no_outro)
+        form.addRow("Chromium executable", self.chrome_path)
+        form.addRow("ChromeDriver executable", self.chromedriver_path)
+        form.addRow("Flash plugin", self.flash_plugin_path)
+        form.addRow("FFmpeg executable", self.ffmpeg_path)
         return panel
 
     def _toggle_advanced(self, shown: bool) -> None:
@@ -245,6 +253,10 @@ class MainWindow(QMainWindow):
             "client_theme_path": self.client_theme_path.text().strip(),
             "no_outro": self.no_outro.currentIndex() == 1,
             "use_outro": self.use_outro.text().strip(),
+            "chrome_path": self.chrome_path.text().strip(),
+            "chromedriver_path": self.chromedriver_path.text().strip(),
+            "flash_plugin_path": self.flash_plugin_path.text().strip(),
+            "ffmpeg_path": self.ffmpeg_path.text().strip(),
         }
 
     def _start_export(self) -> None:

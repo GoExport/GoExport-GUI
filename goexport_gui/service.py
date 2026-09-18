@@ -83,6 +83,9 @@ class GoExportService(QObject):
         ]
         if option["user_id"]:
             arguments.extend(["-uid", option["user_id"]])
+        for name in ("chrome_path", "chromedriver_path", "flash_plugin_path", "ffmpeg_path"):
+            if option[name]:
+                arguments.extend([f"--{name.replace('_', '-')}", option[name]])
         if option["no_outro"]:
             arguments.append("--no-outro")
         elif option["use_outro"]:
