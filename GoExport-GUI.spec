@@ -20,7 +20,7 @@ exe = EXE(
     a.datas,
     [],
     name="GoExport-GUI",
-    icon='default.ico',
+    icon='goexport_gui/resources/default.ico',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
