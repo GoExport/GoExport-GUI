@@ -173,6 +173,7 @@ class MainWindow(QMainWindow):
         self.chrome_path = QLineEdit()
         self.chromedriver_path = QLineEdit()
         self.flash_plugin_path = QLineEdit()
+        self.flash_plugin_version = QLineEdit()
         self.ffmpeg_path = QLineEdit()
         self.no_outro = QComboBox()
         self.no_outro.addItems(["Include outro", "No outro"])
@@ -190,6 +191,7 @@ class MainWindow(QMainWindow):
         form.addRow("Chromium executable", self.chrome_path)
         form.addRow("ChromeDriver executable", self.chromedriver_path)
         form.addRow("Flash plugin", self.flash_plugin_path)
+        form.addRow("Flash plugin version", self.flash_plugin_version)
         form.addRow("FFmpeg executable", self.ffmpeg_path)
         return panel
 
@@ -256,6 +258,7 @@ class MainWindow(QMainWindow):
             "chrome_path": self.chrome_path.text().strip(),
             "chromedriver_path": self.chromedriver_path.text().strip(),
             "flash_plugin_path": self.flash_plugin_path.text().strip(),
+            "flash_plugin_version": self.flash_plugin_version.text().strip(),
             "ffmpeg_path": self.ffmpeg_path.text().strip(),
         }
 
