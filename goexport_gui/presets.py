@@ -16,4 +16,7 @@ def load_presets(path: Path | None = None) -> list[Preset]:
     with (path or preset_file()).open("rb") as source: data = tomllib.load(source)
     entries = data.get("preset", {})
     if not isinstance(entries, dict) or not entries: raise ValueError("presets.toml must contain [preset.<name>] sections.")
-    return [Preset(name, dict(values)) for name, values in entries.items() if isinstance(values, dict)]
+    return sorted(
+        [Preset(name, dict(values)) for name, values in entries.items() if isinstance(values, dict)],
+        key=lambda preset: preset.name.casefold(),
+    )
