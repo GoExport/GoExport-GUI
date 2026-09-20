@@ -46,6 +46,24 @@ def main() -> int:
         QLineEdit:disabled, QComboBox:disabled, QPlainTextEdit:disabled {
             background: #201a17; color: #7e7169; border-color: #3a302a;
         }
+        QCheckBox { color: #f7f1ec; spacing: 8px; padding: 2px 0; }
+        QCheckBox:hover { color: #ffc197; }
+        QCheckBox:disabled { color: #7e7169; }
+        QCheckBox::indicator {
+            width: 16px; height: 16px;
+            border: 1px solid #80604d;
+            border-radius: 4px;
+            background: #15110f;
+        }
+        QCheckBox::indicator:hover { border-color: #f47821; background: #201713; }
+        QCheckBox::indicator:focus { border-color: #ff9a52; }
+        QCheckBox::indicator:checked {
+            border-color: #f47821;
+            background: #f47821;
+        }
+        QCheckBox::indicator:checked:hover { background: #ff9a52; border-color: #ff9a52; }
+        QCheckBox::indicator:disabled { border-color: #3a302a; background: #201a17; }
+        QCheckBox::indicator:checked:disabled { background: #6d4931; border-color: #6d4931; }
         QComboBox QAbstractItemView {
             background: #241d19;
             color: #f7f1ec;
