@@ -3,6 +3,8 @@ resolution = "1280x720"
 format = "mp4"
 url = "http://127.0.0.1:4343/"
 api_url = "http://127.0.0.1:4343/"
+url = "http://127.0.0.1:4343/"
+api_url = "http://127.0.0.1:4343/"
 swf_url = "http://localhost:4664/animation/414827163ad4eb60/player.swf"
 store_path = "http://localhost:4664/store/3a981f5cb2739137/<store>"
 client_theme_path = "http://localhost:4664/static/ad44370a650793d9/<client_theme>"
@@ -26,6 +28,9 @@ api_url = "https://flashthemes.net/"
 swf_url = "https://lightspeed.flashthemes.net/static/animation/aisd82ij/player.swf?v=2"
 store_path = "https://flashthemes.net/static/store/3a981f5cb2739137/<store>?v={owner_id}"
 client_theme_path = "https://lightspeed.flashthemes.net/static/ct/ad44370a650793d9/<client_theme>"
+swf_url = "https://lightspeed.flashthemes.net/static/animation/aisd82ij/player.swf?v=2"
+store_path = "https://flashthemes.net/static/store/3a981f5cb2739137/<store>?v={owner_id}"
+client_theme_path = "https://lightspeed.flashthemes.net/static/ct/ad44370a650793d9/<client_theme>"
 no_outro = false
 
 [preset."Vyond Remastered"]
@@ -37,3 +42,4 @@ swf_url = "http://localhost:4343/animation/414827163ad4eb60/player.swf"
 store_path = "http://localhost:4343/store/3a981f5cb2739137/<store>"
 client_theme_path = "http://localhost:4343/static/ad44370a650793d9/<client_theme>"
 no_outro = false
+
