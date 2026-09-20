@@ -14,8 +14,11 @@ Install the minimal GUI dependencies into `.venv` and start the application:
 For exports, place `GoExport.exe` beside the GUI application. The GUI invokes
 GoExport's documented `--json record` CLI mode, so GoExport remains responsible
 for recording, bundled browser/Flash/FFmpeg dependencies, and output behavior.
-The Advanced section can optionally pass alternate Chromium, ChromeDriver, Flash,
-and FFmpeg settings to GoExport; leaving them blank uses GoExport's defaults.
+The Advanced section exposes every setting supported by GoExport's `record`
+command: output format and resolution, server/player URLs, outro behavior,
+widescreen mode, Electron integration, Flash timeout behavior, verbose logging,
+and alternate Chromium, ChromeDriver, Flash, and FFmpeg settings. Leaving a
+runtime path blank uses GoExport's default.
 
 ## Presets
 

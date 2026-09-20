@@ -73,14 +73,17 @@ class GoExportService(QObject):
 
     def _arguments(self) -> list[str]:
         option = self.options
-        arguments = [
-            "--json", "record", "-id", option["movie_id"],
+        arguments = ["--json"]
+        if option["verbose"]:
+            arguments.append("--verbose")
+        arguments.extend([
+            "record", "-id", option["movie_id"],
             "-f", option["format"], "-out", option["output"],
             "-r", option["resolution"], "-u", option["url"],
             "-api", option["api_url"], "-swf", option["swf_url"],
             "-store", option["store_path"],
             "-theme", option["client_theme_path"],
-        ]
+        ])
         if option["user_id"]:
             arguments.extend(["-uid", option["user_id"]])
         for name in (
@@ -96,6 +99,12 @@ class GoExportService(QObject):
             arguments.append("--no-outro")
         elif option["use_outro"]:
             arguments.extend(["--use-outro", option["use_outro"]])
+        if option["no_wide"]:
+            arguments.append("--no-wide")
+        if option["electron"]:
+            arguments.append("--electron")
+        if option["no_flash_timeout"]:
+            arguments.append("--no-flash-timeout")
         return arguments
 
     def _read_events(self) -> None:

@@ -8,7 +8,7 @@ from typing import Any
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QPixmap
 from PyQt6.QtWidgets import (
-    QComboBox, QFileDialog, QFormLayout, QFrame, QHBoxLayout, QLabel, QLineEdit,
+    QCheckBox, QComboBox, QFileDialog, QFormLayout, QFrame, QHBoxLayout, QLabel, QLineEdit,
     QMainWindow, QMessageBox, QPushButton, QProgressBar, QPlainTextEdit,
     QScrollArea, QSizePolicy, QToolButton, QVBoxLayout, QWidget,
 )
@@ -178,6 +178,18 @@ class MainWindow(QMainWindow):
         self.no_outro = QComboBox()
         self.no_outro.addItems(["Include outro", "No outro"])
         self._configure_combo_popup(self.no_outro)
+        self.no_wide = QCheckBox("Disable widescreen mode")
+        self.no_wide.setToolTip("Pass --no-wide to use GoAnimate's standard aspect mode.")
+        self.electron = QCheckBox("Connect to an Electron browser")
+        self.electron.setToolTip(
+            "Pass --electron to hook into an Electron browser on remote debugging port 9222."
+        )
+        self.no_flash_timeout = QCheckBox("Wait indefinitely for Flash")
+        self.no_flash_timeout.setToolTip(
+            "Pass --no-flash-timeout instead of stopping when the Flash player takes too long to load."
+        )
+        self.verbose = QCheckBox("Enable verbose logging")
+        self.verbose.setToolTip("Include GoExport debug messages in the details log.")
         form.addRow("Output", output_row)
         form.addRow("Format", self.video_format)
         form.addRow("Resolution", self.resolution)
@@ -188,6 +200,10 @@ class MainWindow(QMainWindow):
         form.addRow("Theme path", self.client_theme_path)
         form.addRow("Outro file", self.use_outro)
         form.addRow("Outro", self.no_outro)
+        form.addRow("Display mode", self.no_wide)
+        form.addRow("Browser integration", self.electron)
+        form.addRow("Flash timeout", self.no_flash_timeout)
+        form.addRow("Logging", self.verbose)
         form.addRow("Chromium executable", self.chrome_path)
         form.addRow("ChromeDriver executable", self.chromedriver_path)
         form.addRow("Flash plugin", self.flash_plugin_path)
@@ -218,6 +234,10 @@ class MainWindow(QMainWindow):
             widget.setText(str(values.get(name, default)))
         self.video_format.setCurrentText(str(values.get("format", "mp4")))
         self.no_outro.setCurrentIndex(1 if values.get("no_outro", False) else 0)
+        self.no_wide.setChecked(bool(values.get("no_wide", False)))
+        self.electron.setChecked(bool(values.get("electron", False)))
+        self.no_flash_timeout.setChecked(bool(values.get("no_flash_timeout", False)))
+        self.verbose.setChecked(bool(values.get("verbose", False)))
 
     def _choose_output(self) -> None:
         filename, _ = QFileDialog.getSaveFileName(
@@ -255,6 +275,10 @@ class MainWindow(QMainWindow):
             "client_theme_path": self.client_theme_path.text().strip(),
             "no_outro": self.no_outro.currentIndex() == 1,
             "use_outro": self.use_outro.text().strip(),
+            "no_wide": self.no_wide.isChecked(),
+            "electron": self.electron.isChecked(),
+            "no_flash_timeout": self.no_flash_timeout.isChecked(),
+            "verbose": self.verbose.isChecked(),
             "chrome_path": self.chrome_path.text().strip(),
             "chromedriver_path": self.chromedriver_path.text().strip(),
             "flash_plugin_path": self.flash_plugin_path.text().strip(),
