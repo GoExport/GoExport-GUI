@@ -169,6 +169,11 @@ class MainWindow(QMainWindow):
         self.swf_url = QLineEdit()
         self.store_path = QLineEdit()
         self.client_theme_path = QLineEdit()
+        self.additional_flashvars = QLineEdit()
+        self.additional_flashvars.setPlaceholderText("name=value&another=value")
+        self.replacements = QPlainTextEdit()
+        self.replacements.setPlaceholderText("owner_id={user_id}\nname=value")
+        self.replacements.setMaximumHeight(90)
         self.use_outro = QLineEdit()
         self.chrome_path = QLineEdit()
         self.chromedriver_path = QLineEdit()
@@ -198,6 +203,8 @@ class MainWindow(QMainWindow):
         form.addRow("SWF URL", self.swf_url)
         form.addRow("Store path", self.store_path)
         form.addRow("Theme path", self.client_theme_path)
+        form.addRow("Additional Flashvars", self.additional_flashvars)
+        form.addRow("Replacements", self.replacements)
         form.addRow("Outro file", self.use_outro)
         form.addRow("Outro", self.no_outro)
         form.addRow("Display mode", self.no_wide)
@@ -232,6 +239,16 @@ class MainWindow(QMainWindow):
         )
         for widget, name, default in fields:
             widget.setText(str(values.get(name, default)))
+        self.additional_flashvars.setText(
+            str(values.get("additional_flashvars", ""))
+        )
+        replacements = values.get("replacements", {})
+        if isinstance(replacements, dict):
+            self.replacements.setPlainText(
+                "\n".join(f"{name}={value}" for name, value in replacements.items())
+            )
+        else:
+            self.replacements.setPlainText(str(replacements))
         self.video_format.setCurrentText(str(values.get("format", "mp4")))
         self.no_outro.setCurrentIndex(1 if values.get("no_outro", False) else 0)
         self.no_wide.setChecked(bool(values.get("no_wide", False)))
@@ -265,6 +282,22 @@ class MainWindow(QMainWindow):
             QMessageBox.warning(self, "Invalid resolution", "Use a resolution such as 1280x720.")
             self.resolution.setFocus()
             return None
+        replacements = []
+        for line_number, line in enumerate(
+            self.replacements.toPlainText().splitlines(), start=1
+        ):
+            entry = line.strip()
+            if not entry:
+                continue
+            if "=" not in entry:
+                QMessageBox.warning(
+                    self,
+                    "Invalid replacement",
+                    f"Replacement line {line_number} must use NAME=VALUE.",
+                )
+                self.replacements.setFocus()
+                return None
+            replacements.append(entry)
         return {
             "movie_id": movie_id, "user_id": self.user_id.text().strip() or None,
             "format": self.video_format.currentText(),
@@ -273,6 +306,8 @@ class MainWindow(QMainWindow):
             "api_url": self.api_url.text().strip(), "swf_url": self.swf_url.text().strip(),
             "store_path": self.store_path.text().strip(),
             "client_theme_path": self.client_theme_path.text().strip(),
+            "additional_flashvars": self.additional_flashvars.text().strip(),
+            "replacements": replacements,
             "no_outro": self.no_outro.currentIndex() == 1,
             "use_outro": self.use_outro.text().strip(),
             "no_wide": self.no_wide.isChecked(),

@@ -27,3 +27,6 @@ swf_url = "https://lightspeed.flashthemes.net/static/animation/aisd82ij/player.s
 store_path = "https://flashthemes.net/static/store/3a981f5cb2739137/<store>?v={owner_id}"
 client_theme_path = "https://lightspeed.flashthemes.net/static/ct/ad44370a650793d9/<client_theme>"
 no_outro = false
+
+[preset.FlashThemes.replacements]
+owner_id = "{user_id}"

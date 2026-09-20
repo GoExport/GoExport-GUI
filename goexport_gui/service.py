@@ -86,6 +86,12 @@ class GoExportService(QObject):
         ])
         if option["user_id"]:
             arguments.extend(["-uid", option["user_id"]])
+        if option["additional_flashvars"]:
+            arguments.extend(
+                ["--additional-flashvars", option["additional_flashvars"]]
+            )
+        for replacement in option["replacements"]:
+            arguments.extend(["--replacement", replacement])
         for name in (
             "chrome_path",
             "chromedriver_path",

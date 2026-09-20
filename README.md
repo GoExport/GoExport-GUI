@@ -18,13 +18,25 @@ The Advanced section exposes every setting supported by GoExport's `record`
 command: output format and resolution, server/player URLs, outro behavior,
 widescreen mode, Electron integration, Flash timeout behavior, verbose logging,
 and alternate Chromium, ChromeDriver, Flash, and FFmpeg settings. Leaving a
-runtime path blank uses GoExport's default.
+runtime path blank uses GoExport's default. Additional Flashvars can add new
+player values or override standard ones. Replacements are entered one per line
+as `name=value` and can reference runtime fields such as `{user_id}`.
 
 ## Presets
 
 Edit `presets.toml` to add or modify Wrapper-compatible server endpoints. A
 preset selection loads the Advanced controls; your manual changes stay in effect
 until you select another preset.
+
+Presets may define the new fields directly:
+
+```toml
+[preset.Example]
+additional_flashvars = "customMode=true"
+
+[preset.Example.replacements]
+owner_id = "{user_id}"
+```
 
 ## Build
 
