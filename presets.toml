@@ -23,8 +23,8 @@ resolution = "1280x720"
 format = "mp4"
 url = "https://flashthemes.net/"
 api_url = "https://flashthemes.net/"
-swf_url = "https://lightspeed.flashthemes.net/static/animation/aisd82ij/player.swf?v=2"
-store_path = "https://flashthemes.net/static/store/3a981f5cb2739137/<store>?v={owner_id}"
+swf_url = "https://lightspeed.flashthemes.net/static/animation/new87/player.swf?v=2"
+store_path = "https://lightspeed.flashthemes.net/static/store/<store>"
 client_theme_path = "https://lightspeed.flashthemes.net/static/ct/ad44370a650793d9/<client_theme>"
 no_outro = false
 
