@@ -1,23 +1,48 @@
 # Copy a [preset.<name>] section to add another compatible platform. Selecting
 # a preset replaces Advanced values; your later edits remain until you select one.
-[preset."Wrapper Offline"]
+# The legacy V1 `local` source, represented through V2's built-in player
+# template.
+[preset."Wrapper Offline (Legacy)"]
 resolution = "1280x720"
 format = "mp4"
-url = "http://localhost:4343/"
-api_url = "http://localhost:4343/"
+url = "http://127.0.0.1:4343/"
+api_url = "http://127.0.0.1:4343/"
 swf_url = "http://localhost:4664/animation/414827163ad4eb60/player.swf"
 store_path = "http://localhost:4664/store/3a981f5cb2739137/<store>"
 client_theme_path = "http://localhost:4664/static/ad44370a650793d9/<client_theme>"
 no_outro = false
+
+# The legacy V1 `local2` source for Wrapper: Offline 2.1 and later.
+[preset."Wrapper Offline (2.1+)"]
+resolution = "1280x720"
+format = "mp4"
+url = "http://127.0.0.1:4343/"
+api_url = "http://127.0.0.1:4343/"
+swf_url = "http://localhost:4664/animation/414827163ad4eb60/player.swf"
+store_path = "http://localhost:4664/store/3a981f5cb2739137/<store>"
+client_theme_path = "http://localhost:4664/static/ad44370a650793d9/<client_theme>"
+no_outro = false
+
+# Keep the familiar generic name pointed at the current 2.1+ source.
+[preset."Wrapper Offline"]
+resolution = "1280x720"
+format = "mp4"
+url = "http://127.0.0.1:4343/"
+api_url = "http://127.0.0.1:4343/"
+swf_url = "http://localhost:4664/animation/414827163ad4eb60/player.swf"
+store_path = "http://localhost:4664/store/3a981f5cb2739137/<store>"
+client_theme_path = "http://localhost:4664/static/ad44370a650793d9/<client_theme>"
+no_outro = false
+
 [preset.FlashThemes]
-# Change these endpoints to the values used by your FlashThemes installation.
+# V1's FlashThemes source used the Lightspeed player and theme host.
 resolution = "1280x720"
 format = "mp4"
 url = "https://flashthemes.net/"
 api_url = "https://flashthemes.net/"
-swf_url = "https://flashthemes.net/animation/414827163ad4eb60/player.swf"
-store_path = "https://flashthemes.net/store/3a981f5cb2739137/<store>"
-client_theme_path = "https://flashthemes.net/static/ad44370a650793d9/<client_theme>"
+swf_url = "https://lightspeed.flashthemes.net/static/animation/aisd82ij/player.swf?v=2"
+store_path = "https://flashthemes.net/static/store/3a981f5cb2739137/<store>?v={owner_id}"
+client_theme_path = "https://lightspeed.flashthemes.net/static/ct/ad44370a650793d9/<client_theme>"
 no_outro = false
 [preset."Vyond: Remastered"]
 resolution = "1280x720"
