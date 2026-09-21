@@ -4,11 +4,18 @@ from pathlib import Path
 from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import QApplication, QMessageBox
 from goexport_gui.window import MainWindow
+def resource_path(relative_path: str) -> Path:
+    """Resolve an app resource in source and PyInstaller one-file builds."""
+    bundle_root = Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parent))
+    return bundle_root / relative_path
+
+
 def main() -> int:
     app = QApplication(sys.argv)
 
-    icon_path = Path(__file__).parent / "goexport_gui" / "resources" / "default.ico"
-    app.setWindowIcon(QIcon(str(icon_path)))
+    app_icon = QIcon(str(resource_path("goexport_gui/resources/default.ico")))
+    if not app_icon.isNull():
+        app.setWindowIcon(app_icon)
 
     app.setStyle("Fusion")
     app.setStyleSheet("""
@@ -114,5 +121,7 @@ def main() -> int:
     """)
     try: window = MainWindow()
     except Exception as error: QMessageBox.critical(None, "GoExport GUI", f"Unable to start the GUI:\n{error}"); return 1
+    if not app_icon.isNull():
+        window.setWindowIcon(app_icon)
     window.show(); return app.exec()
 if __name__ == "__main__": raise SystemExit(main())
