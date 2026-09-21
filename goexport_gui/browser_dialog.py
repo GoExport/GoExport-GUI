@@ -67,7 +67,7 @@ class BrowserDialog(QDialog):
         layout.addLayout(navigation)
 
         self.browser = QWebEngineView()
-        self.browser_profile = QWebEngineProfile(self)
+        self.browser_profile = QWebEngineProfile(self.browser)
         self.browser.setPage(BrowserPage(self.browser_profile, self.browser))
         layout.addWidget(self.browser, 1)
 
@@ -78,8 +78,16 @@ class BrowserDialog(QDialog):
         self.cancel_button = QPushButton("Cancel")
         self.ok_button = QPushButton("OK")
         self.ok_button.setObjectName("primaryButton")
-        self.ok_button.setDefault(True)
         self.ok_button.setEnabled(False)
+        for button in (
+            self.back_button,
+            self.forward_button,
+            self.reload_button,
+            self.cancel_button,
+            self.ok_button,
+        ):
+            button.setAutoDefault(False)
+            button.setDefault(False)
         footer.addWidget(self.match_status, 1)
         footer.addWidget(self.cancel_button)
         footer.addWidget(self.ok_button)
