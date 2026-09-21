@@ -30,3 +30,8 @@ no_outro = false
 
 [preset.FlashThemes.replacements]
 owner_id = "{user_id}"
+
+[preset.FlashThemes.browser_picker]
+start_url = "https://flashthemes.net/"
+video_url_regex = '^https://(?:www\.)?flashthemes\.net/movie/(?P<id>[A-Za-z0-9_-]+)/?(?:[?#].*)?$'
+user_url_regex = '^https://(?:www\.)?flashthemes\.net/user/(?P<id>[0-9]+)/?(?:[?#].*)?$'

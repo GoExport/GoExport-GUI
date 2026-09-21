@@ -22,6 +22,12 @@ runtime path blank uses GoExport's default. Additional Flashvars can add new
 player values or override standard ones. Replacements are entered one per line
 as `name=value` and can reference runtime fields such as `{user_id}`.
 
+The **Browse for video or user** button opens an embedded browser for presets
+that define browser-picker rules. Navigate to a supported page, check the ID
+shown at the bottom of the browser, and select **OK**. GoExport fills only the
+matching Video ID or User ID field. The browser accepts HTTP and HTTPS URLs;
+cookies last for the current application session.
+
 ## Presets
 
 Edit `presets.toml` to add or modify Wrapper-compatible server endpoints. A
@@ -37,6 +43,21 @@ additional_flashvars = "customMode=true"
 [preset.Example.replacements]
 owner_id = "{user_id}"
 ```
+
+To enable the browser picker for a preset, add a nested table with a start URL
+and at least one URL regex. Every regex must contain a named `id` capture group:
+
+```toml
+[preset.FlashThemes.browser_picker]
+start_url = "https://flashthemes.net/"
+video_url_regex = '^https://(?:www\.)?flashthemes\.net/movie/(?P<id>[A-Za-z0-9_-]+)/?(?:[?#].*)?$'
+user_url_regex = '^https://(?:www\.)?flashthemes\.net/user/(?P<id>[0-9]+)/?(?:[?#].*)?$'
+```
+
+`video_url_regex` and `user_url_regex` are independently optional, but at least
+one must be present. Invalid expressions or missing `id` groups are reported
+when the GUI starts. Presets without a `browser_picker` table remain valid and
+show the Browse button as disabled.
 
 ## Build
 

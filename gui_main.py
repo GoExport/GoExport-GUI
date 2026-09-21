@@ -1,9 +1,13 @@
 """Entry point for GoExport GUI."""
+
 import sys
 from pathlib import Path
+
+from goexport_gui.window import MainWindow
 from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import QApplication, QMessageBox
-from goexport_gui.window import MainWindow
+
+
 def resource_path(relative_path: str) -> Path:
     """Resolve an app resource in source and PyInstaller one-file builds."""
     bundle_root = Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parent))
@@ -26,6 +30,7 @@ def main() -> int:
         QLabel#brandLogo { color: #ff9a52; font-size: 23pt; font-weight: 650; }
         QLabel#subtitle { color: #b9aaa0; padding-bottom: 4px; }
         QLabel#status { color: #fff8f2; font-weight: 600; }
+        QLabel#browserStatus { color: #ffc197; font-weight: 600; }
         QFrame#card { background: #241d19; border: 1px solid #4c3b31; border-radius: 8px; }
         QMessageBox QLabel { color: #f7f1ec; background: transparent; }
         QMessageBox QPushButton {
@@ -119,9 +124,16 @@ def main() -> int:
         QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal { width: 0; }
         QToolTip { color: #21150d; background: #ffbc8d; border: 1px solid #f47821; }
     """)
-    try: window = MainWindow()
-    except Exception as error: QMessageBox.critical(None, "GoExport GUI", f"Unable to start the GUI:\n{error}"); return 1
+    try:
+        window = MainWindow()
+    except Exception as error:
+        QMessageBox.critical(None, "GoExport GUI", f"Unable to start the GUI:\n{error}")
+        return 1
     if not app_icon.isNull():
         window.setWindowIcon(app_icon)
-    window.show(); return app.exec()
-if __name__ == "__main__": raise SystemExit(main())
+    window.show()
+    return app.exec()
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

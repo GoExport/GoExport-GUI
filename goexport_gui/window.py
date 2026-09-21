@@ -8,17 +8,37 @@ from typing import Any
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QPixmap
 from PyQt6.QtWidgets import (
-    QCheckBox, QComboBox, QFileDialog, QFormLayout, QFrame, QHBoxLayout, QLabel, QLineEdit,
-    QMainWindow, QMessageBox, QPushButton, QProgressBar, QPlainTextEdit,
-    QScrollArea, QSizePolicy, QToolButton, QVBoxLayout, QWidget,
+    QCheckBox,
+    QComboBox,
+    QDialog,
+    QFileDialog,
+    QFormLayout,
+    QFrame,
+    QHBoxLayout,
+    QLabel,
+    QLineEdit,
+    QMainWindow,
+    QMessageBox,
+    QPlainTextEdit,
+    QProgressBar,
+    QPushButton,
+    QScrollArea,
+    QSizePolicy,
+    QToolButton,
+    QVBoxLayout,
+    QWidget,
 )
 
+from goexport_gui.browser_dialog import BrowserDialog
+from goexport_gui.browser_picker import BrowserMatch
 from goexport_gui.presets import load_presets
 from goexport_gui.service import GoExportService
 
 STAGE_NAMES = {
-    "preparing": "Preparing dependencies…", "recording": "Recording video…",
-    "muxing": "Exporting video…", "outro": "Appending outro…",
+    "preparing": "Preparing dependencies…",
+    "recording": "Recording video…",
+    "muxing": "Exporting video…",
+    "outro": "Appending outro…",
     "finalizing": "Finalizing…",
 }
 
@@ -55,14 +75,17 @@ class MainWindow(QMainWindow):
         else:
             title.setPixmap(
                 logo.scaled(
-                    330, 60,
+                    330,
+                    60,
                     Qt.AspectRatioMode.KeepAspectRatio,
                     Qt.TransformationMode.SmoothTransformation,
                 )
             )
         title.setAccessibleName("GoExport")
         title.setFixedHeight(60)
-        subtitle = QLabel("Export a GoAnimate video through your local Wrapper-compatible server.")
+        subtitle = QLabel(
+            "Export a GoAnimate video through your local Wrapper-compatible server."
+        )
         subtitle.setObjectName("subtitle")
         subtitle.setWordWrap(True)
         layout.addWidget(title)
@@ -82,9 +105,12 @@ class MainWindow(QMainWindow):
         self.movie_id.setPlaceholderText("Enter the video ID")
         self.user_id = QLineEdit()
         self.user_id.setPlaceholderText("Enter the user ID")
+        self.browse_ids = QPushButton("Browse for video or user\u2026")
+        self.browse_ids.clicked.connect(self._browse_for_id)
         form.addRow("Preset", self.preset)
         form.addRow("Video ID", self.movie_id)
         form.addRow("User ID", self.user_id)
+        form.addRow("Choose ID", self.browse_ids)
         layout.addWidget(primary)
 
         self.advanced_toggle = self._section_button("Advanced")
@@ -184,7 +210,9 @@ class MainWindow(QMainWindow):
         self.no_outro.addItems(["Include outro", "No outro"])
         self._configure_combo_popup(self.no_outro)
         self.no_wide = QCheckBox("Disable widescreen mode")
-        self.no_wide.setToolTip("Pass --no-wide to use GoAnimate's standard aspect mode.")
+        self.no_wide.setToolTip(
+            "Pass --no-wide to use GoAnimate's standard aspect mode."
+        )
         self.electron = QCheckBox("Connect to an Electron browser")
         self.electron.setToolTip(
             "Pass --electron to hook into an Electron browser on remote debugging port 9222."
@@ -220,28 +248,32 @@ class MainWindow(QMainWindow):
 
     def _toggle_advanced(self, shown: bool) -> None:
         self.advanced_panel.setVisible(shown)
-        self.advanced_toggle.setArrowType(Qt.ArrowType.DownArrow if shown else Qt.ArrowType.RightArrow)
+        self.advanced_toggle.setArrowType(
+            Qt.ArrowType.DownArrow if shown else Qt.ArrowType.RightArrow
+        )
 
     def _toggle_log(self, shown: bool) -> None:
         self.log_panel.setVisible(shown)
-        self.log_toggle.setArrowType(Qt.ArrowType.DownArrow if shown else Qt.ArrowType.RightArrow)
+        self.log_toggle.setArrowType(
+            Qt.ArrowType.DownArrow if shown else Qt.ArrowType.RightArrow
+        )
 
     def _apply_preset(self, index: int) -> None:
         if index < 0:
             return
         values = self._presets[index].values
         fields = (
-            (self.resolution, "resolution", "1280x720"), (self.url, "url", ""),
-            (self.api_url, "api_url", ""), (self.swf_url, "swf_url", ""),
+            (self.resolution, "resolution", "1280x720"),
+            (self.url, "url", ""),
+            (self.api_url, "api_url", ""),
+            (self.swf_url, "swf_url", ""),
             (self.store_path, "store_path", ""),
             (self.client_theme_path, "client_theme_path", ""),
             (self.use_outro, "use_outro", ""),
         )
         for widget, name, default in fields:
             widget.setText(str(values.get(name, default)))
-        self.additional_flashvars.setText(
-            str(values.get("additional_flashvars", ""))
-        )
+        self.additional_flashvars.setText(str(values.get("additional_flashvars", "")))
         replacements = values.get("replacements", {})
         if isinstance(replacements, dict):
             self.replacements.setPlainText(
@@ -255,6 +287,36 @@ class MainWindow(QMainWindow):
         self.electron.setChecked(bool(values.get("electron", False)))
         self.no_flash_timeout.setChecked(bool(values.get("no_flash_timeout", False)))
         self.verbose.setChecked(bool(values.get("verbose", False)))
+        picker_enabled = self._presets[index].browser_picker is not None
+        self.browse_ids.setEnabled(picker_enabled)
+        self.browse_ids.setToolTip(
+            "Browse this preset's site and select a video or user."
+            if picker_enabled
+            else "This preset has no browser-picker rules configured."
+        )
+
+    def _browse_for_id(self) -> None:
+        index = self.preset.currentIndex()
+        if index < 0:
+            return
+        config = self._presets[index].browser_picker
+        if config is None:
+            return
+        dialog = BrowserDialog(config, self)
+        if dialog.exec() != QDialog.DialogCode.Accepted:
+            return
+        match = dialog.selected_match
+        if match is None:
+            return
+        self._apply_browser_match(match)
+
+    def _apply_browser_match(self, match: BrowserMatch) -> None:
+        if match.field == "video":
+            self.movie_id.setText(match.value)
+            self.movie_id.setFocus()
+        else:
+            self.user_id.setText(match.value)
+            self.user_id.setFocus()
 
     def _choose_output(self) -> None:
         filename, _ = QFileDialog.getSaveFileName(
@@ -270,7 +332,9 @@ class MainWindow(QMainWindow):
     def _options(self) -> dict[str, Any] | None:
         movie_id = self.movie_id.text().strip()
         if not movie_id:
-            QMessageBox.warning(self, "Video ID required", "Enter the video ID to export.")
+            QMessageBox.warning(
+                self, "Video ID required", "Enter the video ID to export."
+            )
             self.movie_id.setFocus()
             return None
         resolution = self.resolution.text().strip().lower()
@@ -279,7 +343,9 @@ class MainWindow(QMainWindow):
             if width <= 0 or height <= 0:
                 raise ValueError
         except ValueError:
-            QMessageBox.warning(self, "Invalid resolution", "Use a resolution such as 1280x720.")
+            QMessageBox.warning(
+                self, "Invalid resolution", "Use a resolution such as 1280x720."
+            )
             self.resolution.setFocus()
             return None
         replacements = []
@@ -299,11 +365,14 @@ class MainWindow(QMainWindow):
                 return None
             replacements.append(entry)
         return {
-            "movie_id": movie_id, "user_id": self.user_id.text().strip() or None,
+            "movie_id": movie_id,
+            "user_id": self.user_id.text().strip() or None,
             "format": self.video_format.currentText(),
             "output": self.output.text().strip() or "final_output",
-            "resolution": f"{width}x{height}", "url": self.url.text().strip(),
-            "api_url": self.api_url.text().strip(), "swf_url": self.swf_url.text().strip(),
+            "resolution": f"{width}x{height}",
+            "url": self.url.text().strip(),
+            "api_url": self.api_url.text().strip(),
+            "swf_url": self.swf_url.text().strip(),
             "store_path": self.store_path.text().strip(),
             "client_theme_path": self.client_theme_path.text().strip(),
             "additional_flashvars": self.additional_flashvars.text().strip(),
@@ -343,7 +412,9 @@ class MainWindow(QMainWindow):
 
     def _on_progress(self, value: float, stage: str) -> None:
         self.progress.setValue(round(value))
-        self.status.setText(STAGE_NAMES.get(stage, stage.replace("_", " ").title() + "…"))
+        self.status.setText(
+            STAGE_NAMES.get(stage, stage.replace("_", " ").title() + "…")
+        )
 
     def _on_complete(self, output: str) -> None:
         self.progress.setValue(100)
@@ -352,7 +423,11 @@ class MainWindow(QMainWindow):
     def _on_failed(self, message: str, detail: str) -> None:
         self.status.setText("Export failed")
         self.log_panel.appendPlainText(detail)
-        QMessageBox.critical(self, "Export failed", message + "\n\nOpen details for troubleshooting information.")
+        QMessageBox.critical(
+            self,
+            "Export failed",
+            message + "\n\nOpen details for troubleshooting information.",
+        )
 
     def _export_finished(self) -> None:
         self.export_button.setEnabled(True)
