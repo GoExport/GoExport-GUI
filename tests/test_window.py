@@ -34,9 +34,11 @@ class MainWindowBrowserPickerTests(unittest.TestCase):
         wrapper = self.window.preset.findText("Wrapper Offline 2.1+")
 
         self.window.preset.setCurrentIndex(flashthemes)
-        self.assertTrue(self.window.browse_ids.isEnabled())
+        self.assertTrue(self.window.browse_video.isEnabled())
+        self.assertTrue(self.window.browse_user.isEnabled())
         self.window.preset.setCurrentIndex(wrapper)
-        self.assertFalse(self.window.browse_ids.isEnabled())
+        self.assertFalse(self.window.browse_video.isEnabled())
+        self.assertFalse(self.window.browse_user.isEnabled())
 
     def test_video_match_only_updates_video_field(self):
         self.window.movie_id.setText("old-video")
@@ -65,10 +67,12 @@ class MainWindowBrowserPickerTests(unittest.TestCase):
         with patch("goexport_gui.window.BrowserDialog") as dialog_type:
             dialog_type.return_value.exec.return_value = QDialog.DialogCode.Rejected
             dialog_type.return_value.selected_match = BrowserMatch("video", "ignored")
-            self.window._browse_for_id()
+            self.window._browse_for_id("video")
 
         self.assertEqual(self.window.movie_id.text(), "video")
         self.assertEqual(self.window.user_id.text(), "user")
+        dialog_type.assert_called_once()
+        self.assertEqual(dialog_type.call_args.args[1], "video")
 
 
 if __name__ == "__main__":

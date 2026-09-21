@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass, field
-from typing import Any, Pattern
+from typing import Any, Literal, Pattern
 from urllib.parse import urlsplit
 
 
@@ -14,6 +14,9 @@ class BrowserMatch:
 
     field: str
     value: str
+
+
+PickerField = Literal["video", "user"]
 
 
 @dataclass(frozen=True)
@@ -38,20 +41,30 @@ class BrowserPickerConfig:
             _compile_pattern(self.user_url_regex, "user_url_regex"),
         )
 
-    def matches(self, url: str) -> list[BrowserMatch]:
+    def supports(self, field_name: PickerField) -> bool:
+        """Return whether this preset can select the requested field."""
+        return (
+            self._video_pattern if field_name == "video" else self._user_pattern
+        ) is not None
+
+    def matches(
+        self, url: str, field_name: PickerField | None = None
+    ) -> list[BrowserMatch]:
         """Return all configured rules that match *url*."""
         matches: list[BrowserMatch] = []
-        for field_name, pattern in (
+        for candidate_field, pattern in (
             ("video", self._video_pattern),
             ("user", self._user_pattern),
         ):
+            if field_name is not None and candidate_field != field_name:
+                continue
             if pattern is None:
                 continue
             match = pattern.search(url)
             if match is not None:
                 captured_id = match.group("id")
                 if captured_id:
-                    matches.append(BrowserMatch(field_name, captured_id))
+                    matches.append(BrowserMatch(candidate_field, captured_id))
         return matches
 
 

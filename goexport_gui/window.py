@@ -30,7 +30,7 @@ from PyQt6.QtWidgets import (
 )
 
 from goexport_gui.browser_dialog import BrowserDialog
-from goexport_gui.browser_picker import BrowserMatch
+from goexport_gui.browser_picker import BrowserMatch, PickerField
 from goexport_gui.presets import load_presets
 from goexport_gui.service import GoExportService
 
@@ -103,14 +103,27 @@ class MainWindow(QMainWindow):
         self.preset.currentIndexChanged.connect(self._apply_preset)
         self.movie_id = QLineEdit()
         self.movie_id.setPlaceholderText("Enter the video ID")
+        self.browse_video = QPushButton("Browse\u2026")
+        self.browse_video.clicked.connect(
+            lambda _checked=False: self._browse_for_id("video")
+        )
+        movie_row = QHBoxLayout()
+        movie_row.setContentsMargins(0, 0, 0, 0)
+        movie_row.addWidget(self.movie_id, 1)
+        movie_row.addWidget(self.browse_video)
         self.user_id = QLineEdit()
         self.user_id.setPlaceholderText("Enter the user ID")
-        self.browse_ids = QPushButton("Browse for video or user\u2026")
-        self.browse_ids.clicked.connect(self._browse_for_id)
+        self.browse_user = QPushButton("Browse\u2026")
+        self.browse_user.clicked.connect(
+            lambda _checked=False: self._browse_for_id("user")
+        )
+        user_row = QHBoxLayout()
+        user_row.setContentsMargins(0, 0, 0, 0)
+        user_row.addWidget(self.user_id, 1)
+        user_row.addWidget(self.browse_user)
         form.addRow("Preset", self.preset)
-        form.addRow("Video ID", self.movie_id)
-        form.addRow("User ID", self.user_id)
-        form.addRow("Choose ID", self.browse_ids)
+        form.addRow("Video ID", movie_row)
+        form.addRow("User ID", user_row)
         layout.addWidget(primary)
 
         self.advanced_toggle = self._section_button("Advanced")
@@ -287,22 +300,27 @@ class MainWindow(QMainWindow):
         self.electron.setChecked(bool(values.get("electron", False)))
         self.no_flash_timeout.setChecked(bool(values.get("no_flash_timeout", False)))
         self.verbose.setChecked(bool(values.get("verbose", False)))
-        picker_enabled = self._presets[index].browser_picker is not None
-        self.browse_ids.setEnabled(picker_enabled)
-        self.browse_ids.setToolTip(
-            "Browse this preset's site and select a video or user."
-            if picker_enabled
-            else "This preset has no browser-picker rules configured."
-        )
+        picker_config = self._presets[index].browser_picker
+        for field_name, button in (
+            ("video", self.browse_video),
+            ("user", self.browse_user),
+        ):
+            enabled = picker_config is not None and picker_config.supports(field_name)
+            button.setEnabled(enabled)
+            button.setToolTip(
+                f"Browse this preset's site and select a {field_name}."
+                if enabled
+                else f"This preset has no {field_name} URL rule configured."
+            )
 
-    def _browse_for_id(self) -> None:
+    def _browse_for_id(self, field_name: PickerField) -> None:
         index = self.preset.currentIndex()
         if index < 0:
             return
         config = self._presets[index].browser_picker
-        if config is None:
+        if config is None or not config.supports(field_name):
             return
-        dialog = BrowserDialog(config, self)
+        dialog = BrowserDialog(config, field_name, self)
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
         match = dialog.selected_match

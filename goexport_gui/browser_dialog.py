@@ -17,6 +17,7 @@ from PyQt6.QtWidgets import (
 from goexport_gui.browser_picker import (
     BrowserMatch,
     BrowserPickerConfig,
+    PickerField,
     normalize_browser_url,
 )
 
@@ -33,13 +34,17 @@ class BrowserPage(QWebEnginePage):
 class BrowserDialog(QDialog):
     """Browse a configured site and return an ID from a matching URL."""
 
-    def __init__(self, config: BrowserPickerConfig, parent=None) -> None:
+    def __init__(
+        self, config: BrowserPickerConfig, target_field: PickerField, parent=None
+    ) -> None:
         super().__init__(parent)
         self.config = config
+        self.target_field = target_field
         self.selected_match: BrowserMatch | None = None
         self._current_match: BrowserMatch | None = None
+        self._field_label = "Video ID" if target_field == "video" else "User ID"
 
-        self.setWindowTitle("Browse for a GoExport ID")
+        self.setWindowTitle(f"Browse for a {self._field_label}")
         self.resize(1040, 760)
         self.setMinimumSize(720, 520)
 
@@ -67,7 +72,7 @@ class BrowserDialog(QDialog):
         layout.addWidget(self.browser, 1)
 
         footer = QHBoxLayout()
-        self.match_status = QLabel("Open a configured video or user page.")
+        self.match_status = QLabel(self._instruction())
         self.match_status.setObjectName("browserStatus")
         self.match_status.setWordWrap(True)
         self.cancel_button = QPushButton("Cancel")
@@ -105,21 +110,21 @@ class BrowserDialog(QDialog):
         self.url_field.setText(address)
         self._update_navigation_buttons()
         if url.scheme().lower() not in {"http", "https"}:
-            self._show_no_match("Open a configured video or user page.")
+            self._show_no_match(self._instruction())
             return
 
-        matches = self.config.matches(address)
-        if len(matches) == 1:
+        matches = self.config.matches(address, self.target_field)
+        if matches:
             self._current_match = matches[0]
-            label = "Video ID" if matches[0].field == "video" else "User ID"
-            self.match_status.setText(f"{label}: {matches[0].value}")
+            self.match_status.setText(f"{self._field_label}: {matches[0].value}")
             self.ok_button.setEnabled(True)
-        elif len(matches) > 1:
-            self._show_no_match(
-                "This address matches both video and user rules. Update the preset regexes."
-            )
         else:
-            self._show_no_match("This page is not a configured video or user page.")
+            field_name = "video" if self.target_field == "video" else "user"
+            self._show_no_match(f"This page is not a configured {field_name} page.")
+
+    def _instruction(self) -> str:
+        field_name = "video" if self.target_field == "video" else "user"
+        return f"Open a configured {field_name} page."
 
     def _show_no_match(self, message: str) -> None:
         self._current_match = None

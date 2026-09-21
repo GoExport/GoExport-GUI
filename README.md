@@ -22,11 +22,12 @@ runtime path blank uses GoExport's default. Additional Flashvars can add new
 player values or override standard ones. Replacements are entered one per line
 as `name=value` and can reference runtime fields such as `{user_id}`.
 
-The **Browse for video or user** button opens an embedded browser for presets
-that define browser-picker rules. Navigate to a supported page, check the ID
-shown at the bottom of the browser, and select **OK**. GoExport fills only the
-matching Video ID or User ID field. The browser accepts HTTP and HTTPS URLs;
-cookies last for the current application session.
+The **Browse** button beside each ID field opens an embedded browser for presets
+that define the corresponding browser-picker rule. The Video ID button accepts
+only matching video pages, while the User ID button accepts only matching user
+pages. Navigate to a supported page, check the ID shown at the bottom, and
+select **OK**. The browser accepts HTTP and HTTPS URLs; cookies last for the
+current application session.
 
 ## Presets
 
@@ -56,8 +57,8 @@ user_url_regex = '^https://(?:www\.)?flashthemes\.net/user/(?P<id>[0-9]+)/?(?:[?
 
 `video_url_regex` and `user_url_regex` are independently optional, but at least
 one must be present. Invalid expressions or missing `id` groups are reported
-when the GUI starts. Presets without a `browser_picker` table remain valid and
-show the Browse button as disabled.
+when the GUI starts. A field's Browse button is disabled when the selected
+preset does not define that field's URL regex.
 
 ## Build
 

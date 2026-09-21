@@ -66,6 +66,17 @@ class BrowserPickerConfigTests(unittest.TestCase):
         self.assertIsNotNone(config)
         assert config is not None
         self.assertIsNone(config.user_url_regex)
+        self.assertTrue(config.supports("video"))
+        self.assertFalse(config.supports("user"))
+
+    def test_field_specific_matching_ignores_the_other_rule(self):
+        self.assertEqual(
+            self.config.matches("https://example.com/movie/video-one", "video"),
+            [BrowserMatch("video", "video-one")],
+        )
+        self.assertEqual(
+            self.config.matches("https://example.com/movie/video-one", "user"), []
+        )
 
     def test_invalid_regex_is_rejected(self):
         with self.assertRaisesRegex(ValueError, "not a valid regular expression"):
