@@ -4,7 +4,7 @@ import os
 import sys
 import unittest
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 os.environ.setdefault("QTWEBENGINE_CHROMIUM_FLAGS", "--disable-gpu")
@@ -73,6 +73,23 @@ class MainWindowBrowserPickerTests(unittest.TestCase):
         self.assertEqual(self.window.user_id.text(), "user")
         dialog_type.assert_called_once()
         self.assertEqual(dialog_type.call_args.args[1], "video")
+
+    def test_export_cancel_button_tracks_active_service(self):
+        self.assertFalse(self.window.cancel_export_button.isEnabled())
+        service = MagicMock()
+        service.cancel.return_value = True
+        self.window._service = service
+
+        self.window._export_started()
+        self.assertTrue(self.window.cancel_export_button.isEnabled())
+        self.window._cancel_export()
+
+        service.cancel.assert_called_once_with()
+        self.assertFalse(self.window.cancel_export_button.isEnabled())
+        self.assertEqual(self.window.status.text(), "Cancelling export...")
+
+        self.window._export_finished()
+        self.assertFalse(self.window.cancel_export_button.isEnabled())
 
 
 if __name__ == "__main__":

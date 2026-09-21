@@ -8,7 +8,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from PyQt6.QtCore import QObject, QProcess, pyqtSignal
+from PyQt6.QtCore import QObject, QProcess, QTimer, pyqtSignal
 
 
 def application_directory() -> Path:
@@ -50,6 +50,8 @@ class GoExportService(QObject):
 
     progress = pyqtSignal(float, str)
     completed = pyqtSignal(str)
+    started = pyqtSignal()
+    cancelled = pyqtSignal()
     failed = pyqtSignal(str, str)
     log = pyqtSignal(str)
     finished = pyqtSignal()
@@ -59,8 +61,14 @@ class GoExportService(QObject):
         self.options = options
         self._buffer = b""
         self._completed = False
+        self._cancel_requested = False
         self._failure_reported = False
         self.process = QProcess(self)
+        self._cancel_timer = QTimer(self)
+        self._cancel_timer.setSingleShot(True)
+        self._cancel_timer.setInterval(3000)
+        self._cancel_timer.timeout.connect(self._force_cancel)
+        self.process.started.connect(self.started.emit)
         self.process.readyReadStandardOutput.connect(self._read_events)
         self.process.readyReadStandardError.connect(self._read_stderr)
         self.process.errorOccurred.connect(self._process_error)
@@ -71,25 +79,56 @@ class GoExportService(QObject):
         self.process.setWorkingDirectory(str(executable.parent))
         self.process.start(str(executable), self._arguments())
 
+    def cancel(self) -> bool:
+        """Request termination of an active GoExport process."""
+        if (
+            self._cancel_requested
+            or self.process.state() == QProcess.ProcessState.NotRunning
+        ):
+            return False
+        self._cancel_requested = True
+        self.log.emit("Cancellation requested. Waiting for GoExport to stop...")
+        self.process.terminate()
+        self._cancel_timer.start()
+        return True
+
+    def _force_cancel(self) -> None:
+        if self.process.state() != QProcess.ProcessState.NotRunning:
+            self.log.emit("GoExport did not stop in time; forcing it to close.")
+            self.process.kill()
+
     def _arguments(self) -> list[str]:
         option = self.options
         arguments = ["--json"]
         if option["verbose"]:
             arguments.append("--verbose")
-        arguments.extend([
-            "record", "-id", option["movie_id"],
-            "-f", option["format"], "-out", option["output"],
-            "-r", option["resolution"], "-u", option["url"],
-            "-api", option["api_url"], "-swf", option["swf_url"],
-            "-store", option["store_path"],
-            "-theme", option["client_theme_path"],
-        ])
+        arguments.extend(
+            [
+                "record",
+                "-id",
+                option["movie_id"],
+                "-f",
+                option["format"],
+                "-out",
+                option["output"],
+                "-r",
+                option["resolution"],
+                "-u",
+                option["url"],
+                "-api",
+                option["api_url"],
+                "-swf",
+                option["swf_url"],
+                "-store",
+                option["store_path"],
+                "-theme",
+                option["client_theme_path"],
+            ]
+        )
         if option["user_id"]:
             arguments.extend(["-uid", option["user_id"]])
         if option["additional_flashvars"]:
-            arguments.extend(
-                ["--additional-flashvars", option["additional_flashvars"]]
-            )
+            arguments.extend(["--additional-flashvars", option["additional_flashvars"]])
         for replacement in option["replacements"]:
             arguments.extend(["--replacement", replacement])
         for name in (
@@ -135,12 +174,17 @@ class GoExportService(QObject):
             self._completed = True
             self.completed.emit(str(event["output"]))
         elif event_name == "error":
-            self._report_failure(str(event.get("message", "GoExport failed.")), line)
+            if not self._cancel_requested:
+                self._report_failure(
+                    str(event.get("message", "GoExport failed.")), line
+                )
 
     def _read_stderr(self) -> None:
-        text = bytes(self.process.readAllStandardError()).decode(
-            "utf-8", errors="replace"
-        ).strip()
+        text = (
+            bytes(self.process.readAllStandardError())
+            .decode("utf-8", errors="replace")
+            .strip()
+        )
         if text:
             self.log.emit(text)
 
@@ -150,13 +194,18 @@ class GoExportService(QObject):
             self.failed.emit(message, detail)
 
     def _process_error(self, _error: QProcess.ProcessError) -> None:
-        if not self._completed:
-            self._report_failure("Unable to start GoExport.", self.process.errorString())
+        if not self._completed and not self._cancel_requested:
+            self._report_failure(
+                "Unable to start GoExport.", self.process.errorString()
+            )
 
     def _process_finished(self, exit_code: int, _status: QProcess.ExitStatus) -> None:
+        self._cancel_timer.stop()
         self._read_events()
         self._read_stderr()
-        if exit_code and not self._completed:
+        if self._cancel_requested:
+            self.cancelled.emit()
+        elif exit_code and not self._completed:
             self._report_failure(
                 f"GoExport exited with code {exit_code}.",
                 "See details for GoExport output.",

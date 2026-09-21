@@ -154,7 +154,16 @@ class MainWindow(QMainWindow):
         self.export_button.setDefault(True)
         self.export_button.setMinimumHeight(42)
         self.export_button.clicked.connect(self._start_export)
-        layout.addWidget(self.export_button)
+        self.cancel_export_button = QPushButton("Cancel")
+        self.cancel_export_button.setMinimumHeight(42)
+        self.cancel_export_button.setEnabled(False)
+        self.cancel_export_button.clicked.connect(self._cancel_export)
+        export_actions = QHBoxLayout()
+        export_actions.setContentsMargins(0, 0, 0, 0)
+        export_actions.setSpacing(10)
+        export_actions.addWidget(self.export_button, 1)
+        export_actions.addWidget(self.cancel_export_button)
+        layout.addLayout(export_actions)
 
         self.log_toggle = self._section_button("Show details")
         self.log_toggle.toggled.connect(self._toggle_log)
@@ -417,9 +426,11 @@ class MainWindow(QMainWindow):
         self.status.setText(STAGE_NAMES["preparing"])
         self.export_button.setEnabled(False)
         self._service = GoExportService(options, self)
+        self._service.started.connect(self._export_started)
         self._service.progress.connect(self._on_progress)
         self._service.log.connect(self.log_panel.appendPlainText)
         self._service.completed.connect(self._on_complete)
+        self._service.cancelled.connect(self._on_cancelled)
         self._service.failed.connect(self._on_failed)
         self._service.finished.connect(self._export_finished)
         try:
@@ -427,6 +438,15 @@ class MainWindow(QMainWindow):
         except Exception as error:
             self._on_failed(str(error), repr(error))
             self._export_finished()
+
+    def _export_started(self) -> None:
+        self.cancel_export_button.setEnabled(True)
+
+    def _cancel_export(self) -> None:
+        if self._service is None or not self._service.cancel():
+            return
+        self.cancel_export_button.setEnabled(False)
+        self.status.setText("Cancelling export...")
 
     def _on_progress(self, value: float, stage: str) -> None:
         self.progress.setValue(round(value))
@@ -437,6 +457,9 @@ class MainWindow(QMainWindow):
     def _on_complete(self, output: str) -> None:
         self.progress.setValue(100)
         self.status.setText(f"Complete — {output}")
+
+    def _on_cancelled(self) -> None:
+        self.status.setText("Export cancelled")
 
     def _on_failed(self, message: str, detail: str) -> None:
         self.status.setText("Export failed")
@@ -449,6 +472,7 @@ class MainWindow(QMainWindow):
 
     def _export_finished(self) -> None:
         self.export_button.setEnabled(True)
+        self.cancel_export_button.setEnabled(False)
         if self._service is not None:
             self._service.deleteLater()
         self._service = None
