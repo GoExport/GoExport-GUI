@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import html
+import re
 from pathlib import Path
 from typing import Any
 
@@ -45,6 +47,19 @@ STAGE_NAMES = {
 }
 
 ASSET_DIR = Path(__file__).resolve().parent / "resources"
+
+ANSI_ESCAPE_RE = re.compile(r"\x1b(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
+RICH_LOG_RE = re.compile(
+    r"^(?P<timestamp>\[\d{2}:\d{2}:\d{2}\])(?P<spacing>\s+)"
+    r"(?P<level>DEBUG|INFO|WARNING|ERROR|CRITICAL)(?P<message>.*)$"
+)
+RICH_LEVEL_COLORS = {
+    "DEBUG": "#40c8ff",
+    "INFO": "#40c8ff",
+    "WARNING": "#ffd75f",
+    "ERROR": "#ff5f5f",
+    "CRITICAL": "#ff5f5f",
+}
 
 
 class MainWindow(QMainWindow):
@@ -444,15 +459,35 @@ class MainWindow(QMainWindow):
 
     def _append_log(self, text: str) -> None:
         """Append terminal output while preserving ANSI colors in the details pane."""
-        html = self._ansi_converter.convert(text, full=False)
+        rendered = self._render_log_html(text)
         cursor = self.log_panel.textCursor()
         cursor.movePosition(QTextCursor.MoveOperation.End)
-        cursor.insertHtml(html)
+        cursor.insertHtml(rendered)
         # Do not let the last ANSI span bleed into the following log line.
         cursor.setCharFormat(QTextCharFormat())
         cursor.insertBlock()
         self.log_panel.setTextCursor(cursor)
         self.log_panel.ensureCursorVisible()
+
+    def _render_log_html(self, text: str) -> str:
+        """Render ANSI, with Rich-like colors when a pipe stripped the ANSI codes."""
+        if ANSI_ESCAPE_RE.search(text):
+            return self._ansi_converter.convert(text, full=False)
+
+        match = RICH_LOG_RE.match(text)
+        if match is None:
+            return html.escape(text)
+
+        timestamp = html.escape(match.group("timestamp"))
+        spacing = html.escape(match.group("spacing"))
+        level = match.group("level")
+        message = html.escape(match.group("message"))
+        color = RICH_LEVEL_COLORS[level]
+        weight = "; font-weight:700" if level in {"ERROR", "CRITICAL"} else ""
+        return (
+            f'<span style="color:#8a817c">{timestamp}</span>{spacing}'
+            f'<span style="color:{color}{weight}">{level}</span>{message}'
+        )
 
     def _export_started(self) -> None:
         self.cancel_export_button.setEnabled(True)
