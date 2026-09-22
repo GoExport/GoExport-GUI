@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Any
 
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QPixmap, QTextCursor
+from PyQt6.QtGui import QPixmap, QTextCharFormat, QTextCursor
 from PyQt6.QtWidgets import (
     QCheckBox,
     QComboBox,
@@ -448,6 +448,8 @@ class MainWindow(QMainWindow):
         cursor = self.log_panel.textCursor()
         cursor.movePosition(QTextCursor.MoveOperation.End)
         cursor.insertHtml(html)
+        # Do not let the last ANSI span bleed into the following log line.
+        cursor.setCharFormat(QTextCharFormat())
         cursor.insertBlock()
         self.log_panel.setTextCursor(cursor)
         self.log_panel.ensureCursorVisible()
