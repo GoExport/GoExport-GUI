@@ -101,6 +101,7 @@ class MainWindowBrowserPickerTests(unittest.TestCase):
 
         self.assertTrue(self.window.obs_host.isEnabled())
         self.assertTrue(self.window.obs_password.isEnabled())
+        self.assertTrue(self.window.obs_force_profile.isEnabled())
 
     def test_options_include_obs_settings(self):
         self.window.movie_id.setText("movie")
@@ -112,6 +113,7 @@ class MainWindowBrowserPickerTests(unittest.TestCase):
         self.window.obs_profile.setText("Export Profile")
         self.window.obs_scene_collection.setText("Export Scenes")
         self.window.obs_password.setText("secret")
+        self.window.obs_force_profile.setChecked(True)
 
         options = self.window._options()
 
@@ -123,6 +125,7 @@ class MainWindowBrowserPickerTests(unittest.TestCase):
         self.assertEqual(options["obs_profile"], "Export Profile")
         self.assertEqual(options["obs_scene_collection"], "Export Scenes")
         self.assertEqual(options["obs_password"], "secret")
+        self.assertTrue(options["obs_force_profile"])
 
 
 if __name__ == "__main__":

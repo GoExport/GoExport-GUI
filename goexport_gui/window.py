@@ -244,12 +244,20 @@ class MainWindow(QMainWindow):
         self.obs_password = QLineEdit()
         self.obs_password.setEchoMode(QLineEdit.EchoMode.Password)
         self.obs_password.setPlaceholderText("Uses GOEXPORT_OBS_PASSWORD if blank")
+        self.obs_force_profile = QCheckBox(
+            "Reuse and reconfigure an existing OBS profile"
+        )
+        self.obs_force_profile.setToolTip(
+            "Allows GoExport to use the selected profile and scene collection "
+            "even when they are not marked as GoExport-owned."
+        )
         self._obs_controls = (
             self.obs_host,
             self.obs_port,
             self.obs_profile,
             self.obs_scene_collection,
             self.obs_password,
+            self.obs_force_profile,
         )
         self.no_outro = QComboBox()
         self.no_outro.addItems(["Include outro", "No outro"])
@@ -295,6 +303,7 @@ class MainWindow(QMainWindow):
         form.addRow("OBS profile", self.obs_profile)
         form.addRow("OBS scene collection", self.obs_scene_collection)
         form.addRow("OBS WebSocket password", self.obs_password)
+        form.addRow("OBS profile reuse", self.obs_force_profile)
         self._update_obs_controls()
         return panel
 
@@ -471,6 +480,7 @@ class MainWindow(QMainWindow):
             "obs_scene_collection": self.obs_scene_collection.text().strip()
             or "GoExport",
             "obs_password": self.obs_password.text(),
+            "obs_force_profile": self.obs_force_profile.isChecked(),
         }
 
     def _start_export(self) -> None:

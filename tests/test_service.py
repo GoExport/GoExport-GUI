@@ -96,6 +96,7 @@ class GoExportOBSOptionTests(unittest.TestCase):
             "obs_profile": "Export Profile",
             "obs_scene_collection": "Export Scenes",
             "obs_password": "secret",
+            "obs_force_profile": True,
         }
 
     def test_obs_arguments_are_forwarded(self):
@@ -111,6 +112,7 @@ class GoExportOBSOptionTests(unittest.TestCase):
             arguments[arguments.index("--obs-scene-collection") + 1],
             "Export Scenes",
         )
+        self.assertIn("--obs-force-profile", arguments)
 
     def test_password_is_passed_in_child_environment(self):
         service = GoExportService(self._options())

@@ -21,7 +21,9 @@ alternate Chromium, ChromeDriver, Flash, and FFmpeg settings, and the PyScap or
 OBS recording backend. OBS settings include its WebSocket host, port, password,
 GoExport profile, and scene collection. The password field is masked and passed
 only to the child GoExport process; leaving it blank preserves an existing
-`GOEXPORT_OBS_PASSWORD` environment variable. Leaving a runtime path blank uses
+`GOEXPORT_OBS_PASSWORD` environment variable. Enable **Reuse and reconfigure an
+existing OBS profile** only when you explicitly want GoExport to take over the
+selected profile and scene collection. Leaving a runtime path blank uses
 GoExport's default. Additional Flashvars can add new player values or override
 standard ones. Replacements are entered one per line as `name=value` and can
 reference runtime fields such as `{user_id}`.

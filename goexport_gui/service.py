@@ -165,6 +165,8 @@ class GoExportService(QObject):
             arguments.append("--electron")
         if option["no_flash_timeout"]:
             arguments.append("--no-flash-timeout")
+        if option["obs_force_profile"]:
+            arguments.append("--obs-force-profile")
         return arguments
 
     def _read_events(self) -> None:
