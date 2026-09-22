@@ -91,6 +91,17 @@ class MainWindowBrowserPickerTests(unittest.TestCase):
         self.window._export_finished()
         self.assertFalse(self.window.cancel_export_button.isEnabled())
 
+    def test_details_log_renders_full_ansi_styles(self):
+        self.window._append_log("\x1b[1;38;5;208mRich output\x1b[0m")
+        self.window._append_log("Plain output")
+
+        self.assertEqual(
+            self.window.log_panel.toPlainText().strip(), "Rich output\nPlain output"
+        )
+        html = self.window.log_panel.document().toHtml().lower()
+        self.assertIn("font-weight:700", html.replace(" ", ""))
+        self.assertIn("color:#ff8700", html.replace(" ", ""))
+
 
 if __name__ == "__main__":
     unittest.main()
