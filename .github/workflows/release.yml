@@ -57,7 +57,6 @@ jobs:
           mkdir -p release
           cp "package/$EXECUTABLE" "release/$EXECUTABLE"
           cp presets.toml release/presets.toml
-          cp version.txt release/version.txt
           if [[ "$RUNNER_OS" != "Windows" ]]; then
             chmod 755 "release/$EXECUTABLE"
           fi
@@ -72,7 +71,7 @@ jobs:
           executable_mode = 0o755 if os.environ["RELEASE_OS"] != "Windows" else 0o644
 
           with zipfile.ZipFile(archive, "w", zipfile.ZIP_DEFLATED) as output:
-              for filename, mode in ((executable, executable_mode), ("presets.toml", 0o644), ("version.txt", 0o644)):
+              for filename, mode in ((executable, executable_mode), ("presets.toml", 0o644)):
                   path = os.path.join("release", filename)
                   entry = zipfile.ZipInfo(filename)
                   entry.create_system = 3  # Unix: preserves the mode on extraction.
@@ -80,7 +79,7 @@ jobs:
                   with open(path, "rb") as source:
                       output.writestr(entry, source.read(), compress_type=zipfile.ZIP_DEFLATED)
           PY
-          rm "release/$EXECUTABLE" release/presets.toml release/version.txt
+          rm "release/$EXECUTABLE" release/presets.toml
 
       - uses: actions/upload-artifact@v4
         with:

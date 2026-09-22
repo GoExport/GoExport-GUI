@@ -5,6 +5,7 @@ a = Analysis(
     pathex=[],
     binaries=[],
     datas=[
+        ("version.txt", "."),
         ("goexport_gui/resources/default.ico", "goexport_gui/resources"),
         ("goexport_gui/resources/goexport-logo.svg", "goexport_gui/resources"),
     ],
