@@ -102,6 +102,17 @@ class MainWindowBrowserPickerTests(unittest.TestCase):
         self.assertIn("font-weight:700", html.replace(" ", ""))
         self.assertIn("color:#ff8700", html.replace(" ", ""))
 
+    def test_details_log_colors_rich_levels_when_ansi_was_stripped(self):
+        self.window._append_log("[23:59:24] WARNING Connection pool is full")
+
+        html = self.window.log_panel.document().toHtml().lower().replace(" ", "")
+        self.assertIn("color:#8a817c", html)
+        self.assertIn("color:#ffd75f", html)
+        self.assertEqual(
+            self.window.log_panel.toPlainText().strip(),
+            "[23:59:24] WARNING Connection pool is full",
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
