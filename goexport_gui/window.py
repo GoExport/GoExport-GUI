@@ -33,6 +33,7 @@ from goexport_gui.browser_dialog import BrowserDialog
 from goexport_gui.browser_picker import BrowserMatch, PickerField
 from goexport_gui.presets import load_presets
 from goexport_gui.service import GoExportService
+from goexport_gui.version import VERSION
 
 STAGE_NAMES = {
     "preparing": "Preparing dependencies…",
@@ -50,7 +51,7 @@ class MainWindow(QMainWindow):
         super().__init__()
         self._presets = load_presets()
         self._service: GoExportService | None = None
-        self.setWindowTitle("GoExport")
+        self.setWindowTitle(f"GoExport {VERSION}")
         self.resize(680, 660)
         self.setMinimumSize(600, 540)
         self._build_ui()
@@ -90,6 +91,9 @@ class MainWindow(QMainWindow):
         subtitle.setWordWrap(True)
         layout.addWidget(title)
         layout.addWidget(subtitle)
+        version = QLabel(f"Version {VERSION}")
+        version.setObjectName("subtitle")
+        layout.addWidget(version)
 
         primary = QFrame()
         primary.setObjectName("card")

@@ -23,6 +23,7 @@ try {
     Write-Warning "GoExport-GUI.exe is currently open. The update was saved as GoExport-GUI.updated.exe."
 }
 Copy-Item "$projectRoot\presets.toml" "$releaseDir\presets.toml" -Force
+Copy-Item "$projectRoot\version.txt" "$releaseDir\version.txt" -Force
 
 if ($temporaryDist.StartsWith($projectRoot + "\")) {
     Remove-Item -LiteralPath $temporaryDist -Recurse -Force
