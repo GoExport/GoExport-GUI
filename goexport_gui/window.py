@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Any
 
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QPixmap
+from PyQt6.QtGui import QPixmap, QTextCursor
 from PyQt6.QtWidgets import (
     QCheckBox,
     QComboBox,
@@ -20,6 +20,7 @@ from PyQt6.QtWidgets import (
     QMainWindow,
     QMessageBox,
     QPlainTextEdit,
+    QTextEdit,
     QProgressBar,
     QPushButton,
     QScrollArea,
@@ -33,6 +34,7 @@ from goexport_gui.browser_dialog import BrowserDialog
 from goexport_gui.browser_picker import BrowserMatch, PickerField
 from goexport_gui.presets import load_presets
 from goexport_gui.service import GoExportService
+from ansi2html import Ansi2HTMLConverter
 
 STAGE_NAMES = {
     "preparing": "Preparing dependencies…",
@@ -50,6 +52,7 @@ class MainWindow(QMainWindow):
         super().__init__()
         self._presets = load_presets()
         self._service: GoExportService | None = None
+        self._ansi_converter = Ansi2HTMLConverter(inline=True)
         self.setWindowTitle("GoExport")
         self.resize(680, 660)
         self.setMinimumSize(600, 540)
@@ -168,9 +171,9 @@ class MainWindow(QMainWindow):
         self.log_toggle = self._section_button("Show details")
         self.log_toggle.toggled.connect(self._toggle_log)
         layout.addWidget(self.log_toggle)
-        self.log_panel = QPlainTextEdit()
+        self.log_panel = QTextEdit()
         self.log_panel.setReadOnly(True)
-        self.log_panel.setMaximumBlockCount(500)
+        self.log_panel.document().setMaximumBlockCount(500)
         self.log_panel.setMinimumHeight(150)
         self.log_panel.setVisible(False)
         layout.addWidget(self.log_panel)
@@ -428,7 +431,7 @@ class MainWindow(QMainWindow):
         self._service = GoExportService(options, self)
         self._service.started.connect(self._export_started)
         self._service.progress.connect(self._on_progress)
-        self._service.log.connect(self.log_panel.appendPlainText)
+        self._service.log.connect(self._append_log)
         self._service.completed.connect(self._on_complete)
         self._service.cancelled.connect(self._on_cancelled)
         self._service.failed.connect(self._on_failed)
@@ -438,6 +441,16 @@ class MainWindow(QMainWindow):
         except Exception as error:
             self._on_failed(str(error), repr(error))
             self._export_finished()
+
+    def _append_log(self, text: str) -> None:
+        """Append terminal output while preserving ANSI colors in the details pane."""
+        html = self._ansi_converter.convert(text, full=False)
+        cursor = self.log_panel.textCursor()
+        cursor.movePosition(QTextCursor.MoveOperation.End)
+        cursor.insertHtml(html)
+        cursor.insertBlock()
+        self.log_panel.setTextCursor(cursor)
+        self.log_panel.ensureCursorVisible()
 
     def _export_started(self) -> None:
         self.cancel_export_button.setEnabled(True)
@@ -463,7 +476,7 @@ class MainWindow(QMainWindow):
 
     def _on_failed(self, message: str, detail: str) -> None:
         self.status.setText("Export failed")
-        self.log_panel.appendPlainText(detail)
+        self._append_log(detail)
         QMessageBox.critical(
             self,
             "Export failed",
