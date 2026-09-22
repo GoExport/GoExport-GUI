@@ -17,10 +17,14 @@ for recording, bundled browser/Flash/FFmpeg dependencies, and output behavior.
 The Advanced section exposes every setting supported by GoExport's `record`
 command: output format and resolution, server/player URLs, outro behavior,
 widescreen mode, Electron integration, Flash timeout behavior, verbose logging,
-and alternate Chromium, ChromeDriver, Flash, and FFmpeg settings. Leaving a
-runtime path blank uses GoExport's default. Additional Flashvars can add new
-player values or override standard ones. Replacements are entered one per line
-as `name=value` and can reference runtime fields such as `{user_id}`.
+alternate Chromium, ChromeDriver, Flash, and FFmpeg settings, and the PyScap or
+OBS recording backend. OBS settings include its WebSocket host, port, password,
+GoExport profile, and scene collection. The password field is masked and passed
+only to the child GoExport process; leaving it blank preserves an existing
+`GOEXPORT_OBS_PASSWORD` environment variable. Leaving a runtime path blank uses
+GoExport's default. Additional Flashvars can add new player values or override
+standard ones. Replacements are entered one per line as `name=value` and can
+reference runtime fields such as `{user_id}`.
 
 The **Browse** button beside each ID field opens an embedded browser for presets
 that define the corresponding browser-picker rule. The Video ID button accepts

@@ -37,7 +37,7 @@ class MainWindowBrowserPickerTests(unittest.TestCase):
         self.assertTrue(self.window.browse_video.isEnabled())
         self.assertTrue(self.window.browse_user.isEnabled())
         self.window.preset.setCurrentIndex(wrapper)
-        self.assertFalse(self.window.browse_video.isEnabled())
+        self.assertTrue(self.window.browse_video.isEnabled())
         self.assertFalse(self.window.browse_user.isEnabled())
 
     def test_video_match_only_updates_video_field(self):
@@ -90,6 +90,39 @@ class MainWindowBrowserPickerTests(unittest.TestCase):
 
         self.window._export_finished()
         self.assertFalse(self.window.cancel_export_button.isEnabled())
+
+    def test_obs_controls_follow_capture_backend(self):
+        self.assertEqual(self.window.capture_backend.currentData(), "pyscap")
+        self.assertFalse(self.window.obs_host.isEnabled())
+
+        self.window.capture_backend.setCurrentIndex(
+            self.window.capture_backend.findData("obs")
+        )
+
+        self.assertTrue(self.window.obs_host.isEnabled())
+        self.assertTrue(self.window.obs_password.isEnabled())
+
+    def test_options_include_obs_settings(self):
+        self.window.movie_id.setText("movie")
+        self.window.capture_backend.setCurrentIndex(
+            self.window.capture_backend.findData("obs")
+        )
+        self.window.obs_host.setText("obs.example")
+        self.window.obs_port.setText("4456")
+        self.window.obs_profile.setText("Export Profile")
+        self.window.obs_scene_collection.setText("Export Scenes")
+        self.window.obs_password.setText("secret")
+
+        options = self.window._options()
+
+        self.assertIsNotNone(options)
+        assert options is not None
+        self.assertEqual(options["capture_backend"], "obs")
+        self.assertEqual(options["obs_host"], "obs.example")
+        self.assertEqual(options["obs_port"], 4456)
+        self.assertEqual(options["obs_profile"], "Export Profile")
+        self.assertEqual(options["obs_scene_collection"], "Export Scenes")
+        self.assertEqual(options["obs_password"], "secret")
 
 
 if __name__ == "__main__":

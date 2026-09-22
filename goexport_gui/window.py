@@ -228,6 +228,25 @@ class MainWindow(QMainWindow):
         self.flash_plugin_path = QLineEdit()
         self.flash_plugin_version = QLineEdit()
         self.ffmpeg_path = QLineEdit()
+        self.capture_backend = QComboBox()
+        self.capture_backend.addItem("PyScap", "pyscap")
+        self.capture_backend.addItem("OBS Studio", "obs")
+        self._configure_combo_popup(self.capture_backend)
+        self.capture_backend.currentIndexChanged.connect(self._update_obs_controls)
+        self.obs_host = QLineEdit("127.0.0.1")
+        self.obs_port = QLineEdit("4455")
+        self.obs_profile = QLineEdit("GoExport")
+        self.obs_scene_collection = QLineEdit("GoExport")
+        self.obs_password = QLineEdit()
+        self.obs_password.setEchoMode(QLineEdit.EchoMode.Password)
+        self.obs_password.setPlaceholderText("Uses GOEXPORT_OBS_PASSWORD if blank")
+        self._obs_controls = (
+            self.obs_host,
+            self.obs_port,
+            self.obs_profile,
+            self.obs_scene_collection,
+            self.obs_password,
+        )
         self.no_outro = QComboBox()
         self.no_outro.addItems(["Include outro", "No outro"])
         self._configure_combo_popup(self.no_outro)
@@ -266,7 +285,19 @@ class MainWindow(QMainWindow):
         form.addRow("Flash plugin", self.flash_plugin_path)
         form.addRow("Flash plugin version", self.flash_plugin_version)
         form.addRow("FFmpeg executable", self.ffmpeg_path)
+        form.addRow("Capture backend", self.capture_backend)
+        form.addRow("OBS WebSocket host", self.obs_host)
+        form.addRow("OBS WebSocket port", self.obs_port)
+        form.addRow("OBS profile", self.obs_profile)
+        form.addRow("OBS scene collection", self.obs_scene_collection)
+        form.addRow("OBS WebSocket password", self.obs_password)
+        self._update_obs_controls()
         return panel
+
+    def _update_obs_controls(self) -> None:
+        enabled = self.capture_backend.currentData() == "obs"
+        for widget in self._obs_controls:
+            widget.setEnabled(enabled)
 
     def _toggle_advanced(self, shown: bool) -> None:
         self.advanced_panel.setVisible(shown)
@@ -391,6 +422,20 @@ class MainWindow(QMainWindow):
                 self.replacements.setFocus()
                 return None
             replacements.append(entry)
+        obs_port = 4455
+        if self.capture_backend.currentData() == "obs":
+            try:
+                obs_port = int(self.obs_port.text().strip())
+                if not 1 <= obs_port <= 65535:
+                    raise ValueError
+            except ValueError:
+                QMessageBox.warning(
+                    self,
+                    "Invalid OBS port",
+                    "Use an OBS WebSocket port from 1 to 65535.",
+                )
+                self.obs_port.setFocus()
+                return None
         return {
             "movie_id": movie_id,
             "user_id": self.user_id.text().strip() or None,
@@ -415,6 +460,13 @@ class MainWindow(QMainWindow):
             "flash_plugin_path": self.flash_plugin_path.text().strip(),
             "flash_plugin_version": self.flash_plugin_version.text().strip(),
             "ffmpeg_path": self.ffmpeg_path.text().strip(),
+            "capture_backend": str(self.capture_backend.currentData()),
+            "obs_host": self.obs_host.text().strip() or "127.0.0.1",
+            "obs_port": obs_port,
+            "obs_profile": self.obs_profile.text().strip() or "GoExport",
+            "obs_scene_collection": self.obs_scene_collection.text().strip()
+            or "GoExport",
+            "obs_password": self.obs_password.text(),
         }
 
     def _start_export(self) -> None:

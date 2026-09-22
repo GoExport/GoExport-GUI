@@ -8,7 +8,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from PyQt6.QtCore import QObject, QProcess, QTimer, pyqtSignal
+from PyQt6.QtCore import QObject, QProcess, QProcessEnvironment, QTimer, pyqtSignal
 
 
 def application_directory() -> Path:
@@ -77,6 +77,11 @@ class GoExportService(QObject):
     def start(self) -> None:
         executable = find_goexport_executable()
         self.process.setWorkingDirectory(str(executable.parent))
+        password = self.options.get("obs_password", "")
+        if password:
+            environment = QProcessEnvironment.systemEnvironment()
+            environment.insert("GOEXPORT_OBS_PASSWORD", password)
+            self.process.setProcessEnvironment(environment)
         self.process.start(str(executable), self._arguments())
 
     def cancel(self) -> bool:
@@ -123,6 +128,16 @@ class GoExportService(QObject):
                 option["store_path"],
                 "-theme",
                 option["client_theme_path"],
+                "--capture-backend",
+                option["capture_backend"],
+                "--obs-host",
+                option["obs_host"],
+                "--obs-port",
+                str(option["obs_port"]),
+                "--obs-profile",
+                option["obs_profile"],
+                "--obs-scene-collection",
+                option["obs_scene_collection"],
             ]
         )
         if option["user_id"]:
