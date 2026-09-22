@@ -8,7 +8,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from PyQt6.QtCore import QObject, QProcess, QTimer, pyqtSignal
+from PyQt6.QtCore import QObject, QProcess, QProcessEnvironment, QTimer, pyqtSignal
 
 
 def application_directory() -> Path:
@@ -64,6 +64,15 @@ class GoExportService(QObject):
         self._cancel_requested = False
         self._failure_reported = False
         self.process = QProcess(self)
+        environment = QProcessEnvironment.systemEnvironment()
+        # Rich disables styling when stderr is a pipe. The GUI consumes that
+        # pipe as a terminal stream, so explicitly ask Rich (and other common
+        # color-aware tools) to keep their complete ANSI formatting enabled.
+        environment.remove("NO_COLOR")
+        environment.insert("FORCE_COLOR", "1")
+        environment.insert("CLICOLOR_FORCE", "1")
+        environment.insert("TERM", "xterm-256color")
+        self.process.setProcessEnvironment(environment)
         self._cancel_timer = QTimer(self)
         self._cancel_timer.setSingleShot(True)
         self._cancel_timer.setInterval(3000)
