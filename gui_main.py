@@ -44,7 +44,7 @@ def main() -> int:
         }
         QMessageBox QPushButton:hover { background: #ff9a52; border-color: #ff9a52; }
         QMessageBox QPushButton:pressed { background: #d85d0b; border-color: #d85d0b; }
-        QLineEdit, QComboBox, QPlainTextEdit {
+        QLineEdit, QComboBox, QPlainTextEdit, QTextEdit {
             background: #15110f;
             color: #f7f1ec;
             border: 1px solid #574438;
@@ -53,9 +53,9 @@ def main() -> int:
             selection-background-color: #f47821;
             selection-color: #21150d;
         }
-        QLineEdit:hover, QComboBox:hover, QPlainTextEdit:hover { border-color: #80604d; }
-        QLineEdit:focus, QComboBox:focus, QPlainTextEdit:focus { border-color: #f47821; }
-        QLineEdit:disabled, QComboBox:disabled, QPlainTextEdit:disabled {
+        QLineEdit:hover, QComboBox:hover, QPlainTextEdit:hover, QTextEdit:hover { border-color: #80604d; }
+        QLineEdit:focus, QComboBox:focus, QPlainTextEdit:focus, QTextEdit:focus { border-color: #f47821; }
+        QLineEdit:disabled, QComboBox:disabled, QPlainTextEdit:disabled, QTextEdit:disabled {
             background: #201a17; color: #7e7169; border-color: #3a302a;
         }
         QCheckBox { color: #f7f1ec; spacing: 8px; padding: 2px 0; }
