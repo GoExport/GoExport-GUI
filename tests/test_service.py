@@ -59,6 +59,15 @@ class GoExportCancellationTests(unittest.TestCase):
 
         process.kill.assert_called_once_with()
 
+    def test_subprocess_keeps_rich_terminal_formatting_enabled(self):
+        _service, process = self._service(QProcess.ProcessState.NotRunning)
+
+        environment = process.setProcessEnvironment.call_args.args[0]
+        self.assertEqual(environment.value("FORCE_COLOR"), "1")
+        self.assertEqual(environment.value("CLICOLOR_FORCE"), "1")
+        self.assertEqual(environment.value("TERM"), "xterm-256color")
+        self.assertFalse(environment.contains("NO_COLOR"))
+
 
 if __name__ == "__main__":
     unittest.main()
