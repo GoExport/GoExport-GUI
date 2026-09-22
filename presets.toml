@@ -8,6 +8,10 @@ store_path = "http://127.0.0.1:4664/store/3a981f5cb2739137/<store>"
 client_theme_path = "http://127.0.0.1:4664/static/ad44370a650793d9/<client_theme>"
 no_outro = false
 
+[preset."Wrapper Offline 2.1+".browser_picker]
+start_url = "http://127.0.0.1:4343/"
+video_url_regex = '^http://127\.0\.0\.1:4343/\?redirect=/movies/play/(?P<id>[A-Za-z0-9_-]+)(?:[&#].*)?$'
+
 [preset."Wrapper Offline 2.0 and earlier"]
 resolution = "1280x720"
 format = "mp4"
@@ -17,6 +21,10 @@ swf_url = "http://127.0.0.1:4343/animation/414827163ad4eb60/player.swf"
 store_path = "http://127.0.0.1:4343/store/3a981f5cb2739137/<store>"
 client_theme_path = "http://127.0.0.1:4343/static/ad44370a650793d9/<client_theme>"
 no_outro = false
+
+[preset."Wrapper Offline 2.0 and earlier".browser_picker]
+start_url = "http://127.0.0.1:4343/"
+video_url_regex = '^http://127\.0\.0\.1:4343/player\?movieId=(?P<id>[A-Za-z0-9_-]+)(?:[&#].*)?$'
 
 [preset.FlashThemes]
 resolution = "1280x720"
