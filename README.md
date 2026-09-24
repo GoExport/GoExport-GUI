@@ -11,8 +11,8 @@ Install the minimal GUI dependencies into `.venv` and start the application:
 .\.venv\Scripts\python.exe gui_main.py
 ```
 
-For exports, place `GoExport.exe` beside the GUI application. The GUI invokes
-GoExport's documented `--json record` CLI mode, so GoExport remains responsible
+For exports, place the GoExport executable beside the GUI application. The GUI invokes
+GoExport's documented `--json -y record` CLI mode, so GoExport remains responsible
 for recording, bundled browser/Flash/FFmpeg dependencies, and output behavior.
 The Advanced section exposes every setting supported by GoExport's `record`
 command: output format and resolution, server/player URLs, outro behavior,
@@ -80,6 +80,9 @@ matching `GoExport.exe` and its existing runtime files.
 ## Tagged releases
 
 Pushing a tag matching `v*` runs the GitHub Actions release workflow. It builds
-Windows x64, Linux x64, and Intel macOS GUI executables, then attaches one ZIP
-per platform to the corresponding GitHub Release. Each ZIP contains only the
-GUI executable and its required editable `presets.toml` file.
+Windows x64, Linux x64, and Intel macOS GUI executables. Linux also publishes
+`GoExport-GUI-x86_64.AppImage`, containing the PyInstaller-collected Qt and
+QtWebEngine runtime. The AppImage intentionally leaves core host components such as
+libc system-provided. Release archives keep the editable `presets.toml` beside the
+GUI artifact; the AppImage also contains default presets for standalone use and
+prefers an adjacent `presets.toml` when one is present.

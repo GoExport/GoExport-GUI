@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+import os
 import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 GUI_ROOT = Path(__file__).resolve().parent.parent
 if str(GUI_ROOT) not in sys.path:
@@ -15,7 +17,7 @@ from goexport_gui.browser_picker import (  # noqa: E402
     browser_picker_config,
     normalize_browser_url,
 )
-from goexport_gui.presets import load_presets  # noqa: E402
+from goexport_gui.presets import load_presets, preset_file  # noqa: E402
 
 VIDEO_PATTERN = (
     r"^https://(?:www\.)?example\.com/movie/"
@@ -118,6 +120,19 @@ class BrowserPickerConfigTests(unittest.TestCase):
 
 
 class PresetLoadingTests(unittest.TestCase):
+    def test_appimage_uses_bundled_presets_when_editable_file_is_absent(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            appimage = root / "GoExport-GUI-x86_64.AppImage"
+            bundle = root / "bundle"
+            bundle.mkdir()
+            with (
+                patch.object(sys, "frozen", True, create=True),
+                patch.object(sys, "_MEIPASS", str(bundle), create=True),
+                patch.dict(os.environ, {"APPIMAGE": str(appimage)}),
+            ):
+                self.assertEqual(preset_file(), bundle / "presets.toml")
+
     def test_presets_with_and_without_picker_rules_load(self):
         contents = f"""
 [preset.Browsable]

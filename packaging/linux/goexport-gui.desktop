@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=GoExport
+Comment=Export GoAnimate movies with GoExport
+Exec=GoExport-GUI
+Icon=goexport-gui
+Categories=AudioVideo;Video;
+Terminal=false

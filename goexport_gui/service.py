@@ -13,6 +13,8 @@ from PyQt6.QtCore import QObject, QProcess, QProcessEnvironment, QTimer, pyqtSig
 
 def application_directory() -> Path:
     if getattr(sys, "frozen", False):
+        if appimage := os.environ.get("APPIMAGE"):
+            return Path(appimage).resolve().parent
         return Path(sys.executable).resolve().parent
     return Path(__file__).resolve().parent.parent
 
@@ -104,7 +106,7 @@ class GoExportService(QObject):
 
     def _arguments(self) -> list[str]:
         option = self.options
-        arguments = ["--json"]
+        arguments = ["--json", "-y"]
         if option["verbose"]:
             arguments.append("--verbose")
         arguments.extend(

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import sys
 import tomllib
 from dataclasses import dataclass
@@ -20,6 +21,11 @@ class Preset:
 
 def preset_file() -> Path:
     if getattr(sys, "frozen", False):
+        if appimage := os.environ.get("APPIMAGE"):
+            editable = Path(appimage).resolve().parent / "presets.toml"
+            if editable.is_file():
+                return editable
+            return Path(sys._MEIPASS) / "presets.toml"
         return Path(sys.executable).resolve().parent / "presets.toml"
     return Path(__file__).resolve().parent.parent / "presets.toml"
 

@@ -114,6 +114,24 @@ class GoExportOBSOptionTests(unittest.TestCase):
         )
         self.assertIn("--obs-force-profile", arguments)
 
+    def test_cli_is_always_started_in_json_auto_approval_mode(self):
+        service = GoExportService(self._options())
+
+        arguments = service._arguments()
+
+        self.assertEqual(arguments[:2], ["--json", "-y"])
+        self.assertIn("record", arguments)
+
+    def test_appimage_finds_cli_beside_portable_artifact(self):
+        appimage = "/opt/GoExport/GoExport-GUI-x86_64.AppImage"
+        with (
+            patch.object(sys, "frozen", True, create=True),
+            patch.dict(os.environ, {"APPIMAGE": appimage}),
+        ):
+            from goexport_gui.service import application_directory
+
+            self.assertEqual(application_directory(), Path(appimage).resolve().parent)
+
     def test_password_is_passed_in_child_environment(self):
         service = GoExportService(self._options())
         service.process = MagicMock()

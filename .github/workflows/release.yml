@@ -48,6 +48,28 @@ jobs:
           python -m PyInstaller GoExport-GUI.spec --noconfirm --clean
           --distpath package --workpath build
 
+      - name: Download pinned AppImage tooling
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          curl --fail --location --retry 3 \
+            --output appimagetool-x86_64.AppImage \
+            https://github.com/AppImage/appimagetool/releases/download/1.9.1/appimagetool-x86_64.AppImage
+          echo "ed4ce84f0d9caff66f50bcca6ff6f35aae54ce8135408b3fa33abfc3cb384eb0  appimagetool-x86_64.AppImage" | sha256sum --check
+          chmod 755 appimagetool-x86_64.AppImage
+
+      - name: Build portable Linux AppImage
+        if: runner.os == 'Linux'
+        shell: bash
+        env:
+          APPIMAGETOOL: ${{ github.workspace }}/appimagetool-x86_64.AppImage
+        run: bash packaging/build_appimage.sh
+
+      - name: Smoke test AppImage runtime
+        if: runner.os == 'Linux'
+        shell: bash
+        run: APPIMAGE_EXTRACT_AND_RUN=1 ./dist/GoExport-GUI-x86_64.AppImage --appimage-version
+
       - name: Create minimal release archive
         shell: bash
         env:
@@ -87,6 +109,14 @@ jobs:
           path: release/${{ matrix.archive }}
           if-no-files-found: error
 
+      - name: Upload Linux AppImage
+        if: runner.os == 'Linux'
+        uses: actions/upload-artifact@v4
+        with:
+          name: GoExport-GUI-x86_64.AppImage
+          path: dist/GoExport-GUI-x86_64.AppImage
+          if-no-files-found: error
+
   publish:
     name: Publish GitHub Release
     needs: build
@@ -108,7 +138,7 @@ jobs:
           TAG: ${{ github.ref_name }}
         run: |
           if gh release view "$TAG" >/dev/null 2>&1; then
-            gh release upload "$TAG" release/*.zip --clobber
+            gh release upload "$TAG" release/*.zip release/*.AppImage --clobber
           else
-            gh release create "$TAG" release/*.zip --generate-notes
+            gh release create "$TAG" release/*.zip release/*.AppImage --generate-notes
           fi
