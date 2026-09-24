@@ -92,9 +92,9 @@ class MainWindow(QMainWindow):
         layout.addWidget(title)
         layout.addWidget(subtitle)
 
-        self.version_status = QLabel(f"GoExport {VERSION}")
+        self.version_status = QLabel(f"{VERSION}")
         self.version_status.setObjectName("versionStatus")
-        self.statusBar().addPermanentWidget(self.version_status)
+        self.statusBar().addWidget(self.version_status)
 
         primary = QFrame()
         primary.setObjectName("card")
