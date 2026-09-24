@@ -4,6 +4,7 @@ import sys
 from pathlib import Path
 
 from goexport_gui.window import MainWindow
+from PyQt6.QtCore import QTimer
 from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import QApplication, QMessageBox
 
@@ -15,7 +16,11 @@ def resource_path(relative_path: str) -> Path:
 
 
 def main() -> int:
-    app = QApplication(sys.argv)
+    smoke_test = "--smoke-test" in sys.argv
+    application_arguments = [
+        argument for argument in sys.argv if argument != "--smoke-test"
+    ]
+    app = QApplication(application_arguments)
 
     app_icon = QIcon(str(resource_path("goexport_gui/resources/default.ico")))
     if not app_icon.isNull():
@@ -145,6 +150,8 @@ def main() -> int:
     if not app_icon.isNull():
         window.setWindowIcon(app_icon)
     window.show()
+    if smoke_test:
+        QTimer.singleShot(0, app.quit)
     return app.exec()
 
 

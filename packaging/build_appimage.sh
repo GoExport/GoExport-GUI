@@ -12,6 +12,24 @@ python -m PyInstaller "$gui_root/GoExport-GUI-AppImage.spec" \
   --distpath "$gui_root/package-appimage" \
   --workpath "$gui_root/build/appimage-pyinstaller"
 
+qxcb_plugin=$(find "$payload" -type f -path '*/platforms/libqxcb.so' -print -quit)
+if [[ -z "$qxcb_plugin" ]]; then
+  echo "PyInstaller payload is missing the Qt xcb platform plugin." >&2
+  exit 1
+fi
+
+if [[ -z $(find "$payload" -name 'libxcb-cursor.so.0' -print -quit) ]]; then
+  echo "PyInstaller payload is missing libxcb-cursor.so.0." >&2
+  exit 1
+fi
+
+qxcb_dependencies=$(ldd "$qxcb_plugin")
+if grep -q 'not found' <<<"$qxcb_dependencies"; then
+  echo "Qt xcb platform plugin has unresolved shared-library dependencies:" >&2
+  echo "$qxcb_dependencies" >&2
+  exit 1
+fi
+
 rm -rf "$app_dir"
 mkdir -p "$app_dir/usr/lib/goexport-gui" "$app_dir/usr/bin" "$gui_root/dist"
 cp -a "$payload/." "$app_dir/usr/lib/goexport-gui/"
