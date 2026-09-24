@@ -82,9 +82,10 @@ matching `GoExport.exe` and its existing runtime files.
 Pushing a tag matching `v*` runs the GitHub Actions release workflow. It builds
 Windows x64, Linux x64, and Intel macOS GUI executables. Linux also publishes
 `GoExport-GUI-x86_64.AppImage`, containing the PyInstaller-collected Qt and
-QtWebEngine runtime, including Qt's XCB cursor dependency. The Linux build rejects
-an incomplete XCB plugin payload and launches the completed AppImage under Xvfb as
-a startup smoke test. The AppImage intentionally leaves core host components such
-as libc system-provided. Release archives keep the editable `presets.toml` beside
-the GUI artifact; the AppImage also contains default presets for standalone use
-and prefers an adjacent `presets.toml` when one is present.
+QtWebEngine runtime, including Qt's non-core XCB and EGL dependencies. The Linux
+build rejects an incomplete XCB plugin payload and CI launches the completed
+AppImage under Xvfb as a startup smoke test. The AppImage itself does not launch or
+bundle Xvfb for users. It intentionally leaves core host components such as libc
+system-provided. Release archives keep the editable `presets.toml` beside the GUI
+artifact; the AppImage also contains default presets for standalone use and
+prefers an adjacent `presets.toml` when one is present.
