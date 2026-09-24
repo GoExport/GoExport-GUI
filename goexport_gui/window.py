@@ -91,9 +91,10 @@ class MainWindow(QMainWindow):
         subtitle.setWordWrap(True)
         layout.addWidget(title)
         layout.addWidget(subtitle)
-        version = QLabel(f"Version {VERSION}")
-        version.setObjectName("subtitle")
-        layout.addWidget(version)
+
+        self.version_status = QLabel(f"GoExport {VERSION}")
+        self.version_status.setObjectName("versionStatus")
+        self.statusBar().addPermanentWidget(self.version_status)
 
         primary = QFrame()
         primary.setObjectName("card")
