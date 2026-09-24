@@ -31,6 +31,19 @@ def main() -> int:
         QLabel#subtitle { color: #b9aaa0; padding-bottom: 4px; }
         QLabel#status { color: #fff8f2; font-weight: 600; }
         QLabel#browserStatus { color: #ffc197; font-weight: 600; }
+        QStatusBar {
+            background: #f47821;
+            color: #21150d;
+            border-top: 1px solid #ff9a52;
+            padding: 2px 8px;
+        }
+        QStatusBar::item { border: 0; }
+        QLabel#versionStatus {
+            color: #21150d;
+            background: transparent;
+            font-weight: 650;
+            padding: 1px 2px;
+        }
         QFrame#card { background: #241d19; border: 1px solid #4c3b31; border-radius: 8px; }
         QMessageBox QLabel { color: #f7f1ec; background: transparent; }
         QMessageBox QPushButton {
