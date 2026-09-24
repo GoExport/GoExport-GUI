@@ -29,6 +29,10 @@ class MainWindowBrowserPickerTests(unittest.TestCase):
     def tearDown(self) -> None:
         self.window.close()
 
+    def test_version_is_shown_in_status_bar(self):
+        self.assertEqual(self.window.version_status.text(), f"GoExport {self.window.windowTitle().removeprefix('GoExport ')}")
+        self.assertIs(self.window.version_status.parentWidget(), self.window.statusBar())
+
     def test_picker_availability_follows_selected_preset(self):
         flashthemes = self.window.preset.findText("FlashThemes")
         wrapper = self.window.preset.findText("Wrapper Offline 2.1+")
