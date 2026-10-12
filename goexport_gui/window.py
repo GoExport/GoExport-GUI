@@ -234,7 +234,7 @@ class MainWindow(QMainWindow):
         self.flash_plugin_version = QLineEdit()
         self.ffmpeg_path = QLineEdit()
         self.capture_backend = QComboBox()
-        self.capture_backend.addItem("PyScap", "pyscap")
+        self.capture_backend.addItem("CaptureKit", "capturekit")
         self.capture_backend.addItem("OBS Studio", "obs")
         self._configure_combo_popup(self.capture_backend)
         self.capture_backend.currentIndexChanged.connect(self._update_obs_controls)

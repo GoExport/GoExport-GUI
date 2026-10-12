@@ -30,7 +30,10 @@ class MainWindowBrowserPickerTests(unittest.TestCase):
         self.window.close()
 
     def test_version_is_shown_in_status_bar(self):
-        self.assertEqual(self.window.version_status.text(), f"GoExport {self.window.windowTitle().removeprefix('GoExport ')}")
+        self.assertEqual(
+            self.window.version_status.text(),
+            self.window.windowTitle().removeprefix("GoExport "),
+        )
         self.assertIs(self.window.version_status.parentWidget(), self.window.statusBar())
 
     def test_picker_availability_follows_selected_preset(self):
@@ -96,7 +99,7 @@ class MainWindowBrowserPickerTests(unittest.TestCase):
         self.assertFalse(self.window.cancel_export_button.isEnabled())
 
     def test_obs_controls_follow_capture_backend(self):
-        self.assertEqual(self.window.capture_backend.currentData(), "pyscap")
+        self.assertEqual(self.window.capture_backend.currentData(), "capturekit")
         self.assertFalse(self.window.obs_host.isEnabled())
 
         self.window.capture_backend.setCurrentIndex(

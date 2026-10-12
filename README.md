@@ -17,7 +17,7 @@ for recording, bundled browser/Flash/FFmpeg dependencies, and output behavior.
 The Advanced section exposes every setting supported by GoExport's `record`
 command: output format and resolution, server/player URLs, outro behavior,
 widescreen mode, Electron integration, Flash timeout behavior, verbose logging,
-alternate Chromium, ChromeDriver, Flash, and FFmpeg settings, and the PyScap or
+alternate Chromium, ChromeDriver, Flash, and FFmpeg settings, and the CaptureKit or
 OBS recording backend. OBS settings include its WebSocket host, port, password,
 GoExport profile, and scene collection. The password field is masked and passed
 only to the child GoExport process; leaving it blank preserves an existing
