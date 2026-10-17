@@ -238,6 +238,28 @@ class MainWindow(QMainWindow):
         self.capture_backend.addItem("OBS Studio", "obs")
         self._configure_combo_popup(self.capture_backend)
         self.capture_backend.currentIndexChanged.connect(self._update_obs_controls)
+        self.capturekit_audio = QComboBox()
+        for label, mode, tooltip in (
+            (
+                "Application audio (Chromium only)",
+                "process",
+                "Record only this export's Chromium audio. Requires application "
+                "audio capture support; otherwise choose System audio or No audio.",
+            ),
+            (
+                "System audio (all desktop sounds)",
+                "system",
+                "Record everything playing through the default output device, "
+                "including other applications and notifications.",
+            ),
+            ("No audio", "none", "Record video without capturing audio."),
+        ):
+            self.capturekit_audio.addItem(label, mode)
+            self.capturekit_audio.setItemData(
+                self.capturekit_audio.count() - 1, tooltip, Qt.ItemDataRole.ToolTipRole
+            )
+        self._configure_combo_popup(self.capturekit_audio)
+        self.capturekit_audio.currentIndexChanged.connect(self._update_obs_controls)
         self.obs_host = QLineEdit("127.0.0.1")
         self.obs_port = QLineEdit("4455")
         self.obs_profile = QLineEdit("GoExport")
@@ -299,6 +321,7 @@ class MainWindow(QMainWindow):
         form.addRow("Flash plugin version", self.flash_plugin_version)
         form.addRow("FFmpeg executable", self.ffmpeg_path)
         form.addRow("Capture backend", self.capture_backend)
+        form.addRow("Audio capture", self.capturekit_audio)
         form.addRow("OBS WebSocket host", self.obs_host)
         form.addRow("OBS WebSocket port", self.obs_port)
         form.addRow("OBS profile", self.obs_profile)
@@ -310,6 +333,12 @@ class MainWindow(QMainWindow):
 
     def _update_obs_controls(self) -> None:
         enabled = self.capture_backend.currentData() == "obs"
+        self.capturekit_audio.setEnabled(not enabled)
+        self.capturekit_audio.setToolTip(
+            "OBS Studio manages audio separately. Configure audio sources in OBS."
+            if enabled
+            else self.capturekit_audio.currentData(Qt.ItemDataRole.ToolTipRole)
+        )
         for widget in self._obs_controls:
             widget.setEnabled(enabled)
 
@@ -349,6 +378,10 @@ class MainWindow(QMainWindow):
         else:
             self.replacements.setPlainText(str(replacements))
         self.video_format.setCurrentText(str(values.get("format", "mp4")))
+        audio_index = self.capturekit_audio.findData(
+            values.get("capturekit_audio", "process")
+        )
+        self.capturekit_audio.setCurrentIndex(max(0, audio_index))
         self.no_outro.setCurrentIndex(1 if values.get("no_outro", False) else 0)
         self.no_wide.setChecked(bool(values.get("no_wide", False)))
         self.electron.setChecked(bool(values.get("electron", False)))
@@ -475,6 +508,7 @@ class MainWindow(QMainWindow):
             "flash_plugin_version": self.flash_plugin_version.text().strip(),
             "ffmpeg_path": self.ffmpeg_path.text().strip(),
             "capture_backend": str(self.capture_backend.currentData()),
+            "capturekit_audio": str(self.capturekit_audio.currentData()),
             "obs_host": self.obs_host.text().strip() or "127.0.0.1",
             "obs_port": obs_port,
             "obs_profile": self.obs_profile.text().strip() or "GoExport",
@@ -531,6 +565,12 @@ class MainWindow(QMainWindow):
     def _on_failed(self, message: str, detail: str) -> None:
         self.status.setText("Export failed")
         self.log_panel.appendPlainText(detail)
+        if "cannot capture chromium's application audio here" in message.lower():
+            message += (
+                "\n\nOpen Advanced settings and change Audio capture to "
+                "System audio (all desktop sounds) or No audio, then export again. "
+                "System audio includes sounds from other applications."
+            )
         QMessageBox.critical(
             self,
             "Export failed",

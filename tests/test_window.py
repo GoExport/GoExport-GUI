@@ -14,7 +14,10 @@ if str(GUI_ROOT) not in sys.path:
     sys.path.insert(0, str(GUI_ROOT))
 
 from goexport_gui.browser_picker import BrowserMatch  # noqa: E402
+from goexport_gui.presets import Preset  # noqa: E402
+from goexport_gui.service import GoExportService  # noqa: E402
 from goexport_gui.window import MainWindow  # noqa: E402
+from PyQt6.QtCore import Qt  # noqa: E402
 from PyQt6.QtWidgets import QApplication, QDialog  # noqa: E402
 
 
@@ -34,7 +37,9 @@ class MainWindowBrowserPickerTests(unittest.TestCase):
             self.window.version_status.text(),
             self.window.windowTitle().removeprefix("GoExport "),
         )
-        self.assertIs(self.window.version_status.parentWidget(), self.window.statusBar())
+        self.assertIs(
+            self.window.version_status.parentWidget(), self.window.statusBar()
+        )
 
     def test_picker_availability_follows_selected_preset(self):
         flashthemes = self.window.preset.findText("FlashThemes")
@@ -109,6 +114,88 @@ class MainWindowBrowserPickerTests(unittest.TestCase):
         self.assertTrue(self.window.obs_host.isEnabled())
         self.assertTrue(self.window.obs_password.isEnabled())
         self.assertTrue(self.window.obs_force_profile.isEnabled())
+
+    def test_audio_modes_and_default(self):
+        combo = self.window.capturekit_audio
+        self.assertEqual(
+            [(combo.itemText(i), combo.itemData(i)) for i in range(combo.count())],
+            [
+                ("Application audio (Chromium only)", "process"),
+                ("System audio (all desktop sounds)", "system"),
+                ("No audio", "none"),
+            ],
+        )
+        self.assertEqual(combo.currentData(), "process")
+        self.assertTrue(combo.isEnabled())
+        for index in range(combo.count()):
+            self.assertTrue(combo.itemData(index, Qt.ItemDataRole.ToolTipRole))
+        form = combo.parentWidget().layout()
+        backend_row, _ = form.getWidgetPosition(self.window.capture_backend)
+        audio_row, _ = form.getWidgetPosition(combo)
+        self.assertEqual(audio_row, backend_row + 1)
+        self.assertEqual(form.labelForField(combo).text(), "Audio capture")
+
+    def test_audio_selection_survives_switching_backends(self):
+        combo = self.window.capturekit_audio
+        for mode in ("process", "system", "none"):
+            with self.subTest(mode=mode):
+                combo.setCurrentIndex(combo.findData(mode))
+                tooltip = combo.toolTip()
+                self.window.capture_backend.setCurrentIndex(
+                    self.window.capture_backend.findData("obs")
+                )
+                self.assertFalse(combo.isEnabled())
+                self.assertIn("OBS Studio manages audio separately", combo.toolTip())
+                self.window.capture_backend.setCurrentIndex(
+                    self.window.capture_backend.findData("capturekit")
+                )
+                self.assertTrue(combo.isEnabled())
+                self.assertEqual(combo.currentData(), mode)
+                self.assertEqual(combo.toolTip(), tooltip)
+                self.assertFalse(self.window.obs_host.isEnabled())
+
+    def test_audio_selection_reaches_record_command(self):
+        self.window.movie_id.setText("movie")
+        for mode in ("process", "system", "none"):
+            with self.subTest(mode=mode):
+                self.window.capturekit_audio.setCurrentIndex(
+                    self.window.capturekit_audio.findData(mode)
+                )
+                options = self.window._options()
+                self.assertEqual(options["capturekit_audio"], mode)
+                arguments = GoExportService(options)._arguments()
+                audio_index = arguments.index("--capturekit-audio")
+                self.assertGreater(audio_index, arguments.index("record"))
+                self.assertEqual(arguments[audio_index + 1], mode)
+
+    def test_preset_can_override_audio_default(self):
+        self.window._presets = [Preset("System audio", {"capturekit_audio": "system"})]
+        self.window._apply_preset(0)
+        self.assertEqual(self.window.capturekit_audio.currentData(), "system")
+
+    def test_unsupported_application_audio_error_explains_gui_recovery(self):
+        message = (
+            "CaptureKit cannot capture Chromium's application audio here: "
+            "requires build 20348+ (this: 19044)."
+        )
+        with patch("goexport_gui.window.QMessageBox.critical") as critical:
+            self.window._on_failed(message, "original diagnostic")
+        text = critical.call_args.args[2]
+        self.assertIn(message, text)
+        self.assertIn("Open Advanced settings", text)
+        self.assertIn("Audio capture", text)
+        self.assertIn("System audio", text)
+        self.assertIn("No audio", text)
+        self.assertEqual(self.window.capturekit_audio.currentData(), "process")
+        self.assertIn("original diagnostic", self.window.log_panel.toPlainText())
+
+    def test_other_errors_keep_existing_message(self):
+        with patch("goexport_gui.window.QMessageBox.critical") as critical:
+            self.window._on_failed("Connection failed", "detail")
+        self.assertEqual(
+            critical.call_args.args[2],
+            "Connection failed\n\nOpen details for troubleshooting information.",
+        )
 
     def test_options_include_obs_settings(self):
         self.window.movie_id.setText("movie")

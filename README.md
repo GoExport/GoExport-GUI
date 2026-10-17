@@ -18,7 +18,13 @@ The Advanced section exposes every setting supported by GoExport's `record`
 command: output format and resolution, server/player URLs, outro behavior,
 widescreen mode, Electron integration, Flash timeout behavior, verbose logging,
 alternate Chromium, ChromeDriver, Flash, and FFmpeg settings, and the CaptureKit or
-OBS recording backend. OBS settings include its WebSocket host, port, password,
+OBS recording backend. Under **Capture backend**, **Audio capture** selects
+application audio (only this export's Chromium, the default), system audio
+(everything on the default output device), or no captured audio. If application
+audio is unsupported, select **System audio** or **No audio** and retry; the GUI
+never switches modes automatically. OBS manages its own audio, so this control
+is disabled while OBS is selected and retains your selection when you switch back.
+OBS settings include its WebSocket host, port, password,
 GoExport profile, and scene collection. The password field is masked and passed
 only to the child GoExport process; leaving it blank preserves an existing
 `GOEXPORT_OBS_PASSWORD` environment variable. Enable **Reuse and reconfigure an
@@ -46,6 +52,7 @@ Presets may define the new fields directly:
 ```toml
 [preset.Example]
 additional_flashvars = "customMode=true"
+capturekit_audio = "process" # or "system", "none"
 
 [preset.Example.replacements]
 owner_id = "{user_id}"

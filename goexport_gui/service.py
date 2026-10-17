@@ -142,6 +142,10 @@ class GoExportService(QObject):
                 option["obs_scene_collection"],
             ]
         )
+        if option["capture_backend"] == "capturekit":
+            arguments.extend(
+                ["--capturekit-audio", option.get("capturekit_audio", "process")]
+            )
         if option["user_id"]:
             arguments.extend(["-uid", option["user_id"]])
         if option["additional_flashvars"]:

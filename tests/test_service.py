@@ -122,6 +122,30 @@ class GoExportOBSOptionTests(unittest.TestCase):
         self.assertEqual(arguments[:2], ["--json", "-y"])
         self.assertIn("record", arguments)
 
+    def test_capturekit_audio_modes_preserve_other_record_arguments(self):
+        options = self._options()
+        options["capture_backend"] = "capturekit"
+        baseline = GoExportService(options)._arguments()
+        self.assertEqual(baseline[baseline.index("--capturekit-audio") + 1], "process")
+        for mode in ("process", "system", "none"):
+            with self.subTest(mode=mode):
+                options["capturekit_audio"] = mode
+                arguments = GoExportService(options)._arguments()
+                index = arguments.index("--capturekit-audio")
+                self.assertGreater(index, arguments.index("record"))
+                self.assertEqual(arguments[index + 1], mode)
+                self.assertEqual(arguments[:index], baseline[:index])
+                self.assertEqual(arguments[index + 2 :], baseline[index + 2 :])
+
+    def test_obs_omits_capturekit_audio_for_every_selection(self):
+        options = self._options()
+        baseline = GoExportService(options)._arguments()
+        self.assertNotIn("--capturekit-audio", baseline)
+        for mode in ("process", "system", "none"):
+            with self.subTest(mode=mode):
+                options["capturekit_audio"] = mode
+                self.assertEqual(GoExportService(options)._arguments(), baseline)
+
     def test_appimage_finds_cli_beside_portable_artifact(self):
         appimage = "/opt/GoExport/GoExport-GUI-x86_64.AppImage"
         with (
