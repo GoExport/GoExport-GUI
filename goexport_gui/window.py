@@ -45,12 +45,37 @@ STAGE_NAMES = {
 
 ASSET_DIR = Path(__file__).resolve().parent / "resources"
 
+VERIFICATION_PROMPTS = {
+    "window": (
+        "Cloudflare needs you to confirm you are human. Complete the check in "
+        "the Chromium window GoExport opened; the export continues automatically."
+    ),
+    "vnc": (
+        "Cloudflare needs you to confirm you are human. Complete the check in "
+        "the GoExport verification viewer window; it closes and the export "
+        "continues automatically."
+    ),
+}
+ANUBIS_PROMPTS = {
+    "window": (
+        "Anubis could not finish its automatic check. Look at the Chromium "
+        "window GoExport opened and complete anything it asks; the export "
+        "continues automatically."
+    ),
+    "vnc": (
+        "Anubis could not finish its automatic check. Look at the GoExport "
+        "verification viewer window and complete anything it asks; it closes "
+        "and the export continues automatically."
+    ),
+}
+
 
 class MainWindow(QMainWindow):
     def __init__(self) -> None:
         super().__init__()
         self._presets = load_presets()
         self._service: GoExportService | None = None
+        self._progress_before_verification = 0
         self.setWindowTitle(f"GoExport {VERSION}")
         self.resize(680, 660)
         self.setMinimumSize(600, 540)
@@ -150,7 +175,12 @@ class MainWindow(QMainWindow):
         self.progress.setRange(0, 100)
         self.progress.setValue(0)
         self.progress.setTextVisible(False)
+        self.verification_notice = QLabel()
+        self.verification_notice.setObjectName("verificationNotice")
+        self.verification_notice.setWordWrap(True)
+        self.verification_notice.setVisible(False)
         status_layout.addWidget(self.status)
+        status_layout.addWidget(self.verification_notice)
         status_layout.addWidget(self.progress)
         layout.addWidget(status_card)
 
@@ -529,6 +559,9 @@ class MainWindow(QMainWindow):
         self._service = GoExportService(options, self)
         self._service.started.connect(self._export_started)
         self._service.progress.connect(self._on_progress)
+        self._service.verification_required.connect(self._on_verification_required)
+        self._service.verification_completed.connect(self._on_verification_complete)
+        self._service.verification_failed.connect(self._on_verification_failed)
         self._service.log.connect(self.log_panel.appendPlainText)
         self._service.completed.connect(self._on_complete)
         self._service.cancelled.connect(self._on_cancelled)
@@ -549,7 +582,57 @@ class MainWindow(QMainWindow):
         self.cancel_export_button.setEnabled(False)
         self.status.setText("Cancelling export...")
 
+    def _on_verification_required(
+        self,
+        message: str,
+        presentation: str,
+        provider: str = "cloudflare",
+        interaction: str = "manual",
+    ) -> None:
+        if self.progress.maximum() != 0:
+            self._progress_before_verification = self.progress.value()
+        # Indeterminate until GoExport resumes; the export cannot progress.
+        self.progress.setRange(0, 0)
+        self.log_panel.appendPlainText(message)
+        if interaction == "automatic":
+            # The browser completes the check by itself: nothing to do.
+            self.status.setText("Completing Anubis verification…")
+            self.verification_notice.setVisible(False)
+            return
+        if provider == "anubis":
+            self.status.setText("Manual verification required.")
+            prompt = ANUBIS_PROMPTS.get(presentation, message)
+        else:
+            self.status.setText("Waiting for browser verification…")
+            prompt = VERIFICATION_PROMPTS.get(presentation, message)
+        self.verification_notice.setText(prompt)
+        self.verification_notice.setVisible(True)
+
+    def _end_verification(self) -> None:
+        if self.progress.maximum() == 0:
+            self.progress.setRange(0, 100)
+            self.progress.setValue(self._progress_before_verification)
+        self.verification_notice.setVisible(False)
+
+    def _on_verification_complete(self, provider: str = "cloudflare") -> None:
+        self._end_verification()
+        if provider == "anubis":
+            self.status.setText("Anubis verification completed — resuming export…")
+        else:
+            self.status.setText("Verification complete — resuming export…")
+
+    def _on_verification_failed(
+        self, message: str, provider: str = "cloudflare"
+    ) -> None:
+        self._end_verification()
+        if provider == "anubis":
+            self.status.setText("Anubis verification failed or timed out.")
+        else:
+            self.status.setText("Browser verification failed")
+        self.log_panel.appendPlainText(message)
+
     def _on_progress(self, value: float, stage: str) -> None:
+        self._end_verification()
         self.progress.setValue(round(value))
         self.status.setText(
             STAGE_NAMES.get(stage, stage.replace("_", " ").title() + "…")
@@ -578,6 +661,7 @@ class MainWindow(QMainWindow):
         )
 
     def _export_finished(self) -> None:
+        self._end_verification()
         self.export_button.setEnabled(True)
         self.cancel_export_button.setEnabled(False)
         if self._service is not None:

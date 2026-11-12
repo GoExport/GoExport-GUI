@@ -47,10 +47,44 @@ def find_goexport_executable() -> Path:
     )
 
 
+# Cleanup after cancellation stops Chromium, its virtual display and any
+# verification viewer before GoExport is forced to close.
+CANCEL_GRACE_MILLISECONDS = 10000
+CANCEL_COMMAND = b'{"command": "cancel"}\n'
+
+
+def child_environment() -> QProcessEnvironment:
+    """The environment for GoExport, without this GUI's private libraries.
+
+    PyInstaller (and therefore the AppImage) prepends its bundled Qt libraries
+    to LD_LIBRARY_PATH; GoExport and the tools it starts must not load them.
+    """
+    environment = QProcessEnvironment.systemEnvironment()
+    if environment.contains("LD_LIBRARY_PATH_ORIG"):
+        original = environment.value("LD_LIBRARY_PATH_ORIG")
+        environment.remove("LD_LIBRARY_PATH_ORIG")
+        if original:
+            environment.insert("LD_LIBRARY_PATH", original)
+        else:
+            environment.remove("LD_LIBRARY_PATH")
+    elif getattr(sys, "frozen", False) and sys.platform.startswith("linux"):
+        environment.remove("LD_LIBRARY_PATH")
+    return environment
+
+
 class GoExportService(QObject):
     """Translate GoExport V2's documented JSON events into Qt signals."""
 
     progress = pyqtSignal(float, str)
+    # message, presentation ("window" for Chromium itself, "vnc" for a viewer,
+    # "" while nothing is shown), provider ("cloudflare" or "anubis") and
+    # interaction ("automatic" while the browser completes the check itself,
+    # "manual" when the user must act)
+    verification_required = pyqtSignal(str, str, str, str)
+    # provider
+    verification_completed = pyqtSignal(str)
+    # message, provider
+    verification_failed = pyqtSignal(str, str)
     completed = pyqtSignal(str)
     started = pyqtSignal()
     cancelled = pyqtSignal()
@@ -68,7 +102,7 @@ class GoExportService(QObject):
         self.process = QProcess(self)
         self._cancel_timer = QTimer(self)
         self._cancel_timer.setSingleShot(True)
-        self._cancel_timer.setInterval(3000)
+        self._cancel_timer.setInterval(CANCEL_GRACE_MILLISECONDS)
         self._cancel_timer.timeout.connect(self._force_cancel)
         self.process.started.connect(self.started.emit)
         self.process.readyReadStandardOutput.connect(self._read_events)
@@ -79,11 +113,11 @@ class GoExportService(QObject):
     def start(self) -> None:
         executable = find_goexport_executable()
         self.process.setWorkingDirectory(str(executable.parent))
+        environment = child_environment()
         password = self.options.get("obs_password", "")
         if password:
-            environment = QProcessEnvironment.systemEnvironment()
             environment.insert("GOEXPORT_OBS_PASSWORD", password)
-            self.process.setProcessEnvironment(environment)
+        self.process.setProcessEnvironment(environment)
         self.process.start(str(executable), self._arguments())
 
     def cancel(self) -> bool:
@@ -95,6 +129,9 @@ class GoExportService(QObject):
             return False
         self._cancel_requested = True
         self.log.emit("Cancellation requested. Waiting for GoExport to stop...")
+        # Lets GoExport stop a pending browser verification cleanly on every
+        # platform; terminate() alone does not reach a Windows console process.
+        self.process.write(CANCEL_COMMAND)
         self.process.terminate()
         self._cancel_timer.start()
         return True
@@ -193,6 +230,22 @@ class GoExportService(QObject):
         event_name = event.get("event")
         if event_name == "progress":
             self.progress.emit(float(event["progress"]), str(event["stage"]))
+        elif event_name == "verification_required":
+            # Older GoExport versions report only Cloudflare, manually.
+            self.verification_required.emit(
+                str(event.get("message", "Manual browser verification is required.")),
+                str(event.get("presentation") or ""),
+                self._provider(event),
+                str(event.get("interaction") or "manual"),
+            )
+        elif event_name == "verification_complete":
+            self.verification_completed.emit(self._provider(event))
+        elif event_name == "verification_failed":
+            if not self._cancel_requested:
+                self.verification_failed.emit(
+                    str(event.get("message", "Browser verification failed.")),
+                    self._provider(event),
+                )
         elif event_name == "complete":
             self._completed = True
             self.completed.emit(str(event["output"]))
@@ -201,6 +254,17 @@ class GoExportService(QObject):
                 self._report_failure(
                     str(event.get("message", "GoExport failed.")), line
                 )
+
+    @staticmethod
+    def _provider(event: dict[str, Any]) -> str:
+        # verification_required's "reason" names the provider; other events
+        # use "reason" for why verification failed.
+        fallback = (
+            event.get("reason")
+            if event.get("event") == "verification_required"
+            else None
+        )
+        return str(event.get("provider") or fallback or "cloudflare")
 
     def _read_stderr(self) -> None:
         text = (

@@ -36,6 +36,13 @@ def main() -> int:
         QLabel#subtitle { color: #b9aaa0; padding-bottom: 4px; }
         QLabel#status { color: #fff8f2; font-weight: 600; }
         QLabel#browserStatus { color: #ffc197; font-weight: 600; }
+        QLabel#verificationNotice {
+            color: #ffc197;
+            background: #3a2618;
+            border: 1px solid #f47821;
+            border-radius: 6px;
+            padding: 8px 10px;
+        }
         QStatusBar {
             background: #f47821;
             color: #21150d;
